@@ -15,7 +15,7 @@
         android:layout_marginTop="150dp"
         android:layout_marginEnd="32dp"
         android:layout_marginRight="32dp"
-        android:onClick="goToDeezer"
+        android:onClick="launchDeezer"
         android:text="Deezer"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
