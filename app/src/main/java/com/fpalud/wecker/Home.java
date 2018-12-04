@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 
 import java.util.Calendar;
 
@@ -16,18 +17,23 @@ public class Home extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_layout);
+    }
 
-        Context context = getApplicationContext();
-        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    public void goToDeezer(View view)
+    {
+        Intent intent = new Intent(this, Deezer.class);
+        this.startActivity(intent);
+    }
+
+    public void setAlarm()
+    {
+        AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 
         Calendar futureDate = Calendar.getInstance();
-
-        System.out.println("Current date : " + futureDate.getTime());
         futureDate.set(Calendar.MINUTE,futureDate.get(Calendar.MINUTE) + 1);
-        System.out.println("Future date : " + futureDate.getTime());
 
-        Intent intent = new Intent(context, LaunchAlarm.class);
-        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(this, LaunchAlarm.class);
+        PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         if (android.os.Build.VERSION.SDK_INT >= 19)
         {
