@@ -11,20 +11,20 @@ import com.deezer.sdk.network.request.DeezerRequest;
 import com.deezer.sdk.network.request.DeezerRequestFactory;
 import com.deezer.sdk.network.request.event.JsonRequestListener;
 import com.deezer.sdk.network.request.event.RequestListener;
-import com.deezer.sdk.player.AlbumPlayer;
 import com.deezer.sdk.player.TrackPlayer;
 import com.deezer.sdk.player.networkcheck.WifiAndMobileNetworkStateChecker;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class Deezer extends AppCompatActivity
 {
     DeezerConnect deezerConnect;
-    ArrayList<Long> playlistIdList = new ArrayList<>();
-    long favoritePlaylistId = 0;
+    ArrayList<Playlist> playlistList = new ArrayList<>();
 
-    Track test;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -46,35 +46,11 @@ public class Deezer extends AppCompatActivity
         {
             public void onResult(Object result, Object requestId)
             {
-                List<Playlist> playlistList = (List<Playlist>) result;
+                List<Playlist> playlistListTemp = (List<Playlist>) result;
+                playlistList.add(playlistListTemp.remove(getLovedTracksID(playlistListTemp)));
+                playlistList.addAll(playlistListTemp);
 
-                for (Playlist playlist : playlistList)
-                {
-                    if (playlist.isLovedTracks())
-                    {
-                        RequestListener playlistListener = new JsonRequestListener()
-                        {
-                            public void onResult(Object result, Object requestId)
-                            {
-                                List<Track> trackList = (List<Track>) result;
-
-                                for (Track track : trackList)
-                                {
-                                    playMusic(track.getId());
-                                    break;
-                                }
-                            }
-
-                            public void onUnparsedResult(String requestResponse, Object requestId) {}
-                            public void onException(Exception e, Object requestId) {}
-                        };
-
-                        DeezerRequest request = DeezerRequestFactory.requestPlaylistTracks(playlist.getId());
-                        deezerConnect.requestAsync(request, playlistListener);
-
-                        break;
-                    }
-                }
+                setupInterface();
             }
 
             public void onUnparsedResult(String requestResponse, Object requestId) {}
@@ -85,7 +61,39 @@ public class Deezer extends AppCompatActivity
         deezerConnect.requestAsync(request, listener);
     }
 
-    void playMusic(long id)
+    public int getLovedTracksID(List<Playlist> list)
+    {
+        for (int i = 0 ; i < list.size() ; i++)
+        {
+            if (list.get(i).isLovedTracks())
+            {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    public void setupInterface()
+    {
+        RequestListener listener = new JsonRequestListener()
+        {
+            public void onResult(Object result, Object requestId)
+            {
+                List<Track> trackList = (List<Track>) result;
+            }
+
+            public void onUnparsedResult(String requestResponse, Object requestId) {}
+            public void onException(Exception e, Object requestId) {}
+        };
+
+        Bundle bundle = new Bundle(1);
+        bundle.putString("limit","2000");
+        DeezerRequest request = new DeezerRequest("playlist/" + playlistList.get(0).getId() + "/tracks", bundle);
+        deezerConnect.requestAsync(request, listener);
+    }
+
+    public void playMusic(long id)
     {
         System.out.println("Launch");
 
