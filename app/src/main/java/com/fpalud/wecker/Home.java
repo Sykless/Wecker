@@ -45,7 +45,6 @@ public class Home extends AppCompatActivity
                 new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
 
         builder.setScopes(new String[]{"streaming"});
-        builder.setShowDialog(true);
         AuthenticationRequest request = builder.build();
 
         // AuthenticationClient.openLoginInBrowser(this, request);
@@ -110,7 +109,7 @@ public class Home extends AppCompatActivity
 
                 // Auth flow returned an error
                 case ERROR:
-                    System.out.println("ERROR");
+                    System.out.println("ERROR : " + response.getError());
                     // Handle error response
                     break;
 
