@@ -4,7 +4,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,36 +13,46 @@ import com.deezer.sdk.model.Permissions;
 import com.deezer.sdk.network.connect.DeezerConnect;
 import com.deezer.sdk.network.connect.SessionStore;
 import com.deezer.sdk.network.connect.event.DialogListener;
+
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Calendar;
 
-public class Home extends AppCompatActivity
-{
+import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
+
+public class Home extends AppCompatActivity {
     DeezerConnect deezerConnect;
 
     private static final int REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "wecker://callback";
 
+    String spotifyToken;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_layout);
     }
 
-    public void goToDeezer()
-    {
+    public void goToDeezer() {
         Intent intent = new Intent(this, Deezer.class);
         this.startActivity(intent);
     }
 
-    public void launchSpotify(View view)
-    {
+    public void launchSpotify(View view) {
         AuthenticationRequest.Builder builder =
-                new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", AuthenticationResponse.Type.TOKEN, REDIRECT_URI);
+                new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", TOKEN, REDIRECT_URI);
 
         builder.setScopes(new String[]{"streaming"});
         AuthenticationRequest request = builder.build();
@@ -51,36 +61,36 @@ public class Home extends AppCompatActivity
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    public void launchDeezer(View view)
-    {
+    public void launchDeezer(View view) {
         deezerConnect = new DeezerConnect(this, "315304");
 
         // restore any saved session
         SessionStore sessionStore = new SessionStore();
 
-        if (sessionStore.restore(deezerConnect, this))
-        {
+        if (sessionStore.restore(deezerConnect, this)) {
             goToDeezer();
-        }
-        else
-        {
-            String[] permissions = new String[] {
+        } else {
+            String[] permissions = new String[]{
                     Permissions.BASIC_ACCESS,
                     Permissions.MANAGE_LIBRARY,
-                    Permissions.LISTENING_HISTORY };
+                    Permissions.LISTENING_HISTORY};
 
             // The listener for authentication events
             DialogListener listener = new DialogListener() {
-                public void onComplete(Bundle values)
-                {
+                public void onComplete(Bundle values) {
                     SessionStore sessionStore = new SessionStore();
                     sessionStore.save(deezerConnect, getApplicationContext());
 
                     goToDeezer();
                 }
 
-                public void onCancel() {System.out.println("Canceled !");}
-                public void onException(Exception e) {System.out.println("Exception !");}
+                public void onCancel() {
+                    System.out.println("Canceled !");
+                }
+
+                public void onException(Exception e) {
+                    System.out.println("Exception !");
+                }
             };
 
             // Launches the authentication process
@@ -88,67 +98,105 @@ public class Home extends AppCompatActivity
         }
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE)
-        {
+        if (requestCode == REQUEST_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
 
-            System.out.println("Logged in !");
+            if (response.getType() == TOKEN) {
+                spotifyToken = response.getAccessToken();
+                System.out.println(spotifyToken);
 
-            switch (response.getType())
-            {
-                // Response was successful and contains auth token
-                case TOKEN:
-                    // Handle successful response
-                    System.out.println("TOKEN");
-                    break;
-
-                // Auth flow returned an error
-                case ERROR:
-                    System.out.println("ERROR : " + response.getError());
-                    // Handle error response
-                    break;
-
-                // Most likely auth flow was cancelled
-                default:
-                    System.out.println("DEFAULT");
-                    // Handle other cases
+                new SpotifyCrawler().execute();
             }
         }
     }
 
-    protected void onNewIntent(Intent intent)
+    public class SpotifyCrawler extends AsyncTask<String, Void, String>
     {
-        super.onNewIntent(intent);
+        String server_response;
 
-        Uri uri = intent.getData();
-        if (uri != null)
+        @Override
+        protected String doInBackground(String... strings)
         {
-            AuthenticationResponse response = AuthenticationResponse.fromUri(uri);
-
-            System.out.println("Logged in with browser !");
-
-            switch (response.getType())
+            try
             {
-                // Response was successful and contains auth token
-                case TOKEN:
-                    // Handle successful response
-                    break;
+                URL url = new URL("https://api.spotify.com/v1/playlists/37i9dQZF1DX0jgyAiPl8Af/tracks");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestProperty("Authorization", "Bearer " + spotifyToken);
 
-                // Auth flow returned an error
-                case ERROR:
-                    // Handle error response
-                    break;
+                int responseCode = urlConnection.getResponseCode();
 
-                // Most likely auth flow was cancelled
-                default:
-                    // Handle other cases
+                if (responseCode == HttpURLConnection.HTTP_OK)
+                {
+                    System.out.println(readStream(urlConnection.getInputStream()));
+                }
+            }
+            catch (MalformedURLException e)
+            {
+                System.out.println("MalformedURLException : " + e.getMessage());
+            }
+            catch (IOException e)
+            {
+                System.out.println("IOException : " + e.getMessage());
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            // System.out.println(server_response);
+        }
+    }
+
+    JSONObject readStream(InputStream in)
+    {
+        BufferedReader reader = null;
+        StringBuffer response = new StringBuffer();
+
+        try
+        {
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = "";
+
+            while ((line = reader.readLine()) != null)
+            {
+                response.append(line);
             }
         }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if (reader != null)
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        try
+        {
+            return new JSONObject(response.toString());
+        }
+        catch (Throwable t)
+        {
+            System.out.println("Could not parse malformed JSON");
+        }
+
+        return null;
     }
 
     public void setAlarm()
