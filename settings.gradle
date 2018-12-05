@@ -1,1 +1,1 @@
-include ':app', ':deezer-sdk-0.11.2'
+include ':app', ':deezer-sdk-0.11.2', ':spotify-app-remote', ':spotify-auth-release-1.1.0'
