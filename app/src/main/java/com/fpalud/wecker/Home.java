@@ -18,6 +18,7 @@ import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -27,49 +28,69 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
-public class Home extends AppCompatActivity {
+public class Home extends AppCompatActivity
+{
+    WeckerParameters app;
     DeezerConnect deezerConnect;
 
     private static final int REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "wecker://callback";
 
-    String spotifyToken;
-
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_layout);
+
+        new SpotifyCrawler().execute("me");
+
+        deezerConnect = new DeezerConnect(this, "315304");
+        if (!new SessionStore().restore(deezerConnect, this))
+        {
+            System.out.println("Deezer not connected");
+        }
     }
 
-    public void goToDeezer() {
+    public void goToDeezer()
+    {
         Intent intent = new Intent(this, Deezer.class);
         this.startActivity(intent);
     }
 
-    public void launchSpotify(View view) {
+    public void goToSpotify()
+    {
+        Intent intent = new Intent(this, Spotify.class);
+        this.startActivity(intent);
+    }
+
+    public void launchSpotify(View view)
+    {
         AuthenticationRequest.Builder builder =
                 new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", TOKEN, REDIRECT_URI);
 
         builder.setScopes(new String[]{"streaming"});
         AuthenticationRequest request = builder.build();
 
-        // AuthenticationClient.openLoginInBrowser(this, request);
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    public void launchDeezer(View view) {
+    public void launchDeezer(View view)
+    {
         deezerConnect = new DeezerConnect(this, "315304");
 
         // restore any saved session
         SessionStore sessionStore = new SessionStore();
 
-        if (sessionStore.restore(deezerConnect, this)) {
+        if (sessionStore.restore(deezerConnect, this))
+        {
             goToDeezer();
-        } else {
+        }
+        else {
             String[] permissions = new String[]{
                     Permissions.BASIC_ACCESS,
                     Permissions.MANAGE_LIBRARY,
@@ -98,40 +119,46 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+    {
         super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
         if (requestCode == REQUEST_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
 
-            if (response.getType() == TOKEN) {
-                spotifyToken = response.getAccessToken();
-                System.out.println(spotifyToken);
+            if (response.getType() == TOKEN)
+            {
+                app = (WeckerParameters) getApplicationContext();
+                app.setSpotifyToken(response.getAccessToken());
 
-                new SpotifyCrawler().execute();
+                goToSpotify();
+            }
+            else
+            {
+                System.out.println("Connection failed : " + response.getError());
             }
         }
     }
 
     public class SpotifyCrawler extends AsyncTask<String, Void, String>
     {
-        String server_response;
+        JSONObject server_response = new JSONObject();
 
         @Override
         protected String doInBackground(String... strings)
         {
             try
             {
-                URL url = new URL("https://api.spotify.com/v1/playlists/37i9dQZF1DX0jgyAiPl8Af/tracks");
+                app = (WeckerParameters) getApplicationContext();
+
+                URL url = new URL("https://api.spotify.com/v1/" + strings[0]);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestProperty("Authorization", "Bearer " + spotifyToken);
+                urlConnection.setRequestProperty("Authorization", "Bearer " + app.getSpotifyToken());
 
-                int responseCode = urlConnection.getResponseCode();
-
-                if (responseCode == HttpURLConnection.HTTP_OK)
+                if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
                 {
-                    System.out.println(readStream(urlConnection.getInputStream()));
+                    server_response = readStream(urlConnection.getInputStream());
                 }
             }
             catch (MalformedURLException e)
@@ -147,56 +174,65 @@ public class Home extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String s) {
+        protected void onPostExecute(String s)
+        {
             super.onPostExecute(s);
-            // System.out.println(server_response);
-        }
-    }
 
-    JSONObject readStream(InputStream in)
-    {
-        BufferedReader reader = null;
-        StringBuffer response = new StringBuffer();
-
-        try
-        {
-            reader = new BufferedReader(new InputStreamReader(in));
-            String line = "";
-
-            while ((line = reader.readLine()) != null)
+            if (server_response.length() == 0)
             {
-                response.append(line);
+                System.out.println("Spotify not connected");
             }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            if (reader != null)
+            else
             {
-                try
-                {
-                    reader.close();
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
+                System.out.println("Spotify connected");
             }
         }
 
-        try
+        JSONObject readStream(InputStream in)
         {
-            return new JSONObject(response.toString());
-        }
-        catch (Throwable t)
-        {
-            System.out.println("Could not parse malformed JSON");
-        }
+            BufferedReader reader = null;
+            StringBuffer response = new StringBuffer();
 
-        return null;
+            try
+            {
+                reader = new BufferedReader(new InputStreamReader(in));
+                String line = "";
+
+                while ((line = reader.readLine()) != null)
+                {
+                    response.append(line);
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                if (reader != null)
+                {
+                    try
+                    {
+                        reader.close();
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            try
+            {
+                return new JSONObject(response.toString());
+            }
+            catch (Throwable t)
+            {
+                System.out.println("Could not parse malformed JSON");
+            }
+
+            return null;
+        }
     }
 
     public void setAlarm()

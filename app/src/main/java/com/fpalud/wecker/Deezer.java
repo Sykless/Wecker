@@ -24,8 +24,6 @@ public class Deezer extends AppCompatActivity
     DeezerConnect deezerConnect;
     ArrayList<Playlist> playlistList = new ArrayList<>();
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
