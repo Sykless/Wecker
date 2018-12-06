@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.deezer.sdk.model.Permissions;
@@ -14,11 +15,13 @@ import com.deezer.sdk.network.connect.DeezerConnect;
 import com.deezer.sdk.network.connect.SessionStore;
 import com.deezer.sdk.network.connect.event.DialogListener;
 
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -28,7 +31,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Calendar;
 
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
@@ -132,7 +134,28 @@ public class Home extends AppCompatActivity
                 app = (WeckerParameters) getApplicationContext();
                 app.setSpotifyToken(response.getAccessToken());
 
-                goToSpotify();
+                ConnectionParams connectionParams =
+                        new ConnectionParams.Builder("46065021347f4ef3bd007487a2497d2f")
+                                .setRedirectUri(REDIRECT_URI)
+                                .showAuthView(true)
+                                .build();
+
+                SpotifyAppRemote.connect(this, connectionParams,
+                        new Connector.ConnectionListener()
+                        {
+                            @Override
+                            public void onConnected(SpotifyAppRemote spotifyAppRemote)
+                            {
+                                app.setSpotifyConnect(spotifyAppRemote);
+                                goToSpotify();
+                            }
+
+                            @Override
+                            public void onFailure(Throwable throwable)
+                            {
+                                Log.e("MainActivity", throwable.getMessage(), throwable);
+                            }
+                        });
             }
             else
             {
