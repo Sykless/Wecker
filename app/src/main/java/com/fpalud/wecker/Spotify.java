@@ -120,8 +120,10 @@ public class Spotify extends AppCompatActivity
                             for (int i = 0 ; i < trackJSONList.length() ; i++)
                             {
                                 trackListSpotify.add(trackJSONList.optJSONObject(i));
-                                System.out.println(new JSONObject(trackListSpotify.get(i).getString("track")).get("name"));
                             }
+
+                            app = (WeckerParameters) getApplicationContext();
+                            // app.getSpotifyConnect().getPlayerApi().play("spotify:track:" + new JSONObject(trackListSpotify.get(0).getString("track")).get("id"));
                         }
                     }
                     catch (Exception e)

@@ -28,6 +28,4 @@ public class WeckerParameters  extends Application
     {
         this.spotifyToken = spotifyToken;
     }
-
-    // spotifyConnect.getPlayerApi().play("spotify:track:68osIGtVjM7QWVe6pazLHj");
 }

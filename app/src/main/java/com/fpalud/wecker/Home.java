@@ -4,11 +4,13 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.deezer.sdk.model.Permissions;
 import com.deezer.sdk.network.connect.DeezerConnect;
@@ -72,13 +74,39 @@ public class Home extends AppCompatActivity
 
     public void launchSpotify(View view)
     {
-        AuthenticationRequest.Builder builder =
-                new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", TOKEN, REDIRECT_URI);
+        if (!SpotifyAppRemote.isSpotifyInstalled(app))
+        {
+            Toast.makeText(app, "Vous devez installer l'application Spotify pour utiliser cette fonctionnalité.", Toast.LENGTH_SHORT).show();
 
-        builder.setScopes(new String[]{"streaming"});
-        AuthenticationRequest request = builder.build();
+            final String appPackageName = "com.spotify.music";
+            final String referrer = "adjust_campaign=com.fpalud.wecker&adjust_tracker=ndjczk&utm_source=adjust_preinstall";
 
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+            try {
+                Uri uri = Uri.parse("market://details")
+                        .buildUpon()
+                        .appendQueryParameter("id", appPackageName)
+                        .appendQueryParameter("referrer", referrer)
+                        .build();
+                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            } catch (android.content.ActivityNotFoundException ignored) {
+                Uri uri = Uri.parse("https://play.google.com/store/apps/details")
+                        .buildUpon()
+                        .appendQueryParameter("id", appPackageName)
+                        .appendQueryParameter("referrer", referrer)
+                        .build();
+                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            }
+        }
+        else
+        {
+            AuthenticationRequest.Builder builder =
+                    new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", TOKEN, REDIRECT_URI);
+
+            builder.setScopes(new String[]{"streaming"});
+            AuthenticationRequest request = builder.build();
+
+            AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+        }
     }
 
     public void launchDeezer(View view)
@@ -134,6 +162,7 @@ public class Home extends AppCompatActivity
                 app = (WeckerParameters) getApplicationContext();
                 app.setSpotifyToken(response.getAccessToken());
 
+                // You only need to connect to SpotifyAppRemote to play music
                 ConnectionParams connectionParams =
                         new ConnectionParams.Builder("46065021347f4ef3bd007487a2497d2f")
                                 .setRedirectUri(REDIRECT_URI)
