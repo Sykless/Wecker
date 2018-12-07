@@ -72,6 +72,12 @@ public class Home extends AppCompatActivity
         this.startActivity(intent);
     }
 
+    public void goToCreate(View view)
+    {
+        Intent intent = new Intent(this, CreateAlarm.class);
+        this.startActivity(intent);
+    }
+
     public void launchSpotify(View view)
     {
         if (!SpotifyAppRemote.isSpotifyInstalled(app))
@@ -182,7 +188,7 @@ public class Home extends AppCompatActivity
                             @Override
                             public void onFailure(Throwable throwable)
                             {
-                                Log.e("MainActivity", throwable.getMessage(), throwable);
+                                Log.e("CreateAlarm", throwable.getMessage(), throwable);
                             }
                         });
             }
