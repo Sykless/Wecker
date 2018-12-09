@@ -37,7 +37,7 @@ import java.util.Calendar;
 
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
-public class Home extends AppCompatActivity
+public class Home extends BaseActivity
 {
     WeckerParameters app;
     DeezerConnect deezerConnect;
@@ -63,19 +63,19 @@ public class Home extends AppCompatActivity
     public void goToDeezer()
     {
         Intent intent = new Intent(this, Deezer.class);
-        this.startActivity(intent);
+        startActivity(intent);
     }
 
     public void goToSpotify()
     {
         Intent intent = new Intent(this, Spotify.class);
-        this.startActivity(intent);
+        startActivity(intent);
     }
 
     public void goToCreate(View view)
     {
         Intent intent = new Intent(this, CreateAlarm.class);
-        this.startActivity(intent);
+        startActivity(intent);
     }
 
     public void launchSpotify(View view)
@@ -117,42 +117,7 @@ public class Home extends AppCompatActivity
 
     public void launchDeezer(View view)
     {
-        deezerConnect = new DeezerConnect(this, "315304");
 
-        // restore any saved session
-        SessionStore sessionStore = new SessionStore();
-
-        if (sessionStore.restore(deezerConnect, this))
-        {
-            goToDeezer();
-        }
-        else {
-            String[] permissions = new String[]{
-                    Permissions.BASIC_ACCESS,
-                    Permissions.MANAGE_LIBRARY,
-                    Permissions.LISTENING_HISTORY};
-
-            // The listener for authentication events
-            DialogListener listener = new DialogListener() {
-                public void onComplete(Bundle values) {
-                    SessionStore sessionStore = new SessionStore();
-                    sessionStore.save(deezerConnect, getApplicationContext());
-
-                    goToDeezer();
-                }
-
-                public void onCancel() {
-                    System.out.println("Canceled !");
-                }
-
-                public void onException(Exception e) {
-                    System.out.println("Exception !");
-                }
-            };
-
-            // Launches the authentication process
-            deezerConnect.authorize(this, permissions, listener);
-        }
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent)
@@ -312,5 +277,11 @@ public class Home extends AppCompatActivity
             System.out.println("Launch api < 19");
             am.set(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
         }
+    }
+
+    @Override
+    protected void onLeaveThisActivity()
+    {
+        // Don't use an exit animation when leaving the main activity!
     }
 }

@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class Deezer extends AppCompatActivity
+public class Deezer extends BaseActivity
 {
     DeezerConnect deezerConnect;
     ArrayList<Playlist> playlistList = new ArrayList<>();
@@ -93,16 +93,10 @@ public class Deezer extends AppCompatActivity
 
     public void playMusic(long id)
     {
-        System.out.println("Launch");
-
         try
         {
-            System.out.println("Try");
-
             TrackPlayer trackPlayer = new TrackPlayer(getApplication(), deezerConnect, new WifiAndMobileNetworkStateChecker());
             trackPlayer.playTrack(id);
-
-            System.out.println("Stopped");
 
             // trackPlayer.stop();
             // trackPlayer.release();

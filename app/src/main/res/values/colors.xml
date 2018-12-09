@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorPrimaryDark">#1a6c91</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="darkBlue">#1A6C91</color>
+    <color name="white">#FFFFFF</color>
+    <color name="deezerColor">#231F20</color>
+    <color name="spotifyColor">#1ED760</color>
+    <color name="folderColor">#F9D873</color>
 </resources>

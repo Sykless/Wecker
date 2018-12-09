@@ -19,7 +19,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class Spotify extends AppCompatActivity
+public class Spotify extends BaseActivity
 {
     WeckerParameters app;
 

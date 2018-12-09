@@ -4,19 +4,38 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#25a0d2"
+    android:background="@color/ic_launcher_background"
     tools:context="com.fpalud.wecker.CreateAlarm">
+
+    <TextView
+        android:id="@+id/selectText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginRight="25dp"
+        android:gravity="center"
+        android:text="Sélectionnez l'origine\nde vos musiques :"
+        android:textColor="#FFFFFF"
+        android:textSize="25sp"
+        app:fontFamily="@font/carter_one"
+        app:layout_constraintBottom_toTopOf="@+id/deezerLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/deezerLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
         android:gravity="center"
         android:orientation="horizontal"
+        android:layout_marginTop="25dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/selectText">
 
         <LinearLayout
             android:id="@+id/deezerCheckBox"
@@ -26,11 +45,13 @@
             android:gravity="center">
 
             <CheckBox
+                android:id="@+id/deezerBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:scaleX="1.75"
                 android:scaleY="1.75"
-                android:buttonTint="#000000"/>
+                android:onClick="deezerBoxChecked"
+                android:buttonTint="#FFFFFF"/>
         </LinearLayout>
 
         <ImageView
@@ -66,11 +87,13 @@
             android:gravity="center">
 
             <CheckBox
+                android:id="@+id/spotifyBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:scaleX="1.75"
                 android:scaleY="1.75"
-                android:buttonTint="#000000"/>
+                android:onClick="spotifyBoxChecked"
+                android:buttonTint="#FFFFFF"/>
         </LinearLayout>
 
         <ImageView
@@ -106,11 +129,13 @@
             android:gravity="center">
 
             <CheckBox
+                android:id="@+id/folderBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:scaleX="1.75"
                 android:scaleY="1.75"
-                android:buttonTint="#000000"/>
+                android:onClick="folderBoxChecked"
+                android:buttonTint="#FFFFFF"/>
         </LinearLayout>
 
         <ImageView
@@ -126,5 +151,29 @@
             android:layout_height="0dp"
             android:layout_weight="0.5" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginRight="25dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#FFFFFF"
+        android:gravity="center"
+        android:onClick="clickValidate"
+        android:padding="15dp"
+        android:text="Valider"
+        android:textAllCaps="false"
+        android:textColor="@color/ic_launcher_background"
+        android:textSize="40sp"
+        app:fontFamily="@font/carter_one"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/folderLayout" />
 
 </android.support.constraint.ConstraintLayout>

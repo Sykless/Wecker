@@ -53,7 +53,13 @@
             android:process=":remote" />
 
         <activity android:name=".Spotify" />
-        <activity android:name=".CreateAlarm"></activity>
+        <activity android:name=".CreateAlarm" />
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
+
+        <activity android:name=".SetupPlaylist"></activity>
     </application>
 
 </manifest>
