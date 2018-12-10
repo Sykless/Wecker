@@ -19,27 +19,12 @@
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
-
         <activity
-            android:name=".Home"
-            android:label="@string/app_name"
-            android:launchMode="singleInstance">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:name=".Home">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="callback"
-                    android:scheme="wecker" />
             </intent-filter>
         </activity>
         <activity android:name=".AlarmScreen" />
@@ -53,7 +38,7 @@
             android:process=":remote" />
 
         <activity android:name=".Spotify" />
-        <activity android:name=".CreateAlarm" />
+        <activity android:name=".MusicOrigin" />
 
         <meta-data
             android:name="preloaded_fonts"

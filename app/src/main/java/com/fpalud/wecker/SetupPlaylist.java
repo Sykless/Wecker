@@ -1,35 +1,33 @@
 package com.fpalud.wecker;
 
+import android.app.AlarmManager;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.res.ColorStateList;
+import android.graphics.ColorFilter;
 import android.os.AsyncTask;
 import android.support.v4.content.res.ResourcesCompat;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.CompoundButtonCompat;
+import android.support.v7.widget.AppCompatButton;
+import android.text.TextUtils;
 import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
 import android.view.Gravity;
+import android.view.View;
 import android.view.animation.AlphaAnimation;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.deezer.sdk.model.Permissions;
 import com.deezer.sdk.model.Playlist;
-import com.deezer.sdk.model.Track;
 import com.deezer.sdk.network.connect.DeezerConnect;
 import com.deezer.sdk.network.connect.SessionStore;
-import com.deezer.sdk.network.connect.event.DialogListener;
 import com.deezer.sdk.network.request.DeezerRequest;
 import com.deezer.sdk.network.request.DeezerRequestFactory;
 import com.deezer.sdk.network.request.event.JsonRequestListener;
 import com.deezer.sdk.network.request.event.RequestListener;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.spotify.sdk.android.authentication.AuthenticationClient;
-import com.spotify.sdk.android.authentication.AuthenticationRequest;
-import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,8 +42,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
-
 public class SetupPlaylist extends BaseActivity
 {
     LinearLayout playlistLayout;
@@ -53,6 +49,7 @@ public class SetupPlaylist extends BaseActivity
     private static final int INIT = -1;
     private static final int DEEZER = 0;
     private static final int SPOTIFY = 1;
+    private static final int FOLDER = 2;
 
     private static final int REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "wecker://callback";
@@ -69,6 +66,8 @@ public class SetupPlaylist extends BaseActivity
 
     DeezerConnect deezerConnect;
     ArrayList<Playlist> deezerPlaylistList = new ArrayList<>();
+    ArrayList<String> spotifyPlaylistList = new ArrayList<>();
+    ArrayList<String> idList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -84,6 +83,13 @@ public class SetupPlaylist extends BaseActivity
         playlistLayout = findViewById(R.id.playlistLayout);
 
         connectionSetup(INIT);
+    }
+
+    public void goToNext(View view)
+    {
+        Intent intent = new Intent(this, Home.class);
+        intent.putStringArrayListExtra("idList", idList);
+        startActivity(intent);
     }
 
     public void connectionSetup(int origin)
@@ -235,70 +241,123 @@ public class SetupPlaylist extends BaseActivity
         playlistLayout.addView(teamName);
     }
 
-    public void addPlaylist(int origin, String playlistName)
+    public void addPlaylist(final int origin, String playlistName)
     {
-        // Create a new RelativeLayout
-        RelativeLayout newButton = new RelativeLayout(this);
+        LinearLayout newPlaylist = new LinearLayout(this);
+        LinearLayout.LayoutParams playlistParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        playlistParams.setMargins(0, 0, 0, 10);
 
-        // Defining the RelativeLayout layout parameters
-        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        newPlaylist.setOrientation(LinearLayout.HORIZONTAL);
+        newPlaylist.setLayoutParams(playlistParams);
+        newPlaylist.setGravity(Gravity.CENTER);
 
-        buttonParams.setMargins(0, 0, 0, 20);
+        // Create a CheckBox
+        CheckBox checkBox = new CheckBox(this);
+        checkBox.setScaleX(1.5f);
+        checkBox.setScaleY(1.5f);
+        checkBox.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                if (origin == DEEZER)
+                {
+                    if (((CheckBox) v).isChecked())
+                    {
+                        idList.add(Long.toString(deezerPlaylistList.get(v.getId()).getId()));
+                    }
+                    else
+                    {
+                        idList.remove(Long.toString(deezerPlaylistList.get(v.getId()).getId()));
+                    }
 
-        // Creating a new TextView
-        TextView teamName = new TextView(this);
+                }
+                else if (origin == SPOTIFY)
+                {
+                    if (((CheckBox) v).isChecked())
+                    {
+                        idList.add(spotifyPlaylistList.get(v.getId()));
+                    }
+                    else
+                    {
+                        idList.remove(spotifyPlaylistList.get(v.getId()));
+                    }
+                }
+                else if (origin == FOLDER)
+                {
+                    // Do things
+                }
 
-        teamName.setText(playlistName);
-        teamName.setTextSize(TypedValue.COMPLEX_UNIT_PX, 50);
-        teamName.setTypeface(ResourcesCompat.getFont(this,R.font.carter_one));
-        teamName.setTextColor(getResources().getColor(R.color.ic_launcher_background));
-        teamName.setLines(1);
+                System.out.println(idList);
+            }
+        });
 
-        // Defining the layout parameters of the TextView
-        RelativeLayout.LayoutParams textParameters = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        textParameters.setMarginStart(8);
+        LinearLayout.LayoutParams boxParameters = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        checkBox.setLayoutParams(boxParameters);
 
-        // Setting the parameters on the TextView
-        teamName.setLayoutParams(textParameters);
+        // Create a LinearLayout for the CheckBox
+        LinearLayout checkboxLayout = new LinearLayout(this);
+        checkboxLayout.setGravity(Gravity.CENTER);
+        checkboxLayout.setPadding(0,0,15,0);
+        checkboxLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        checkboxLayout.addView(checkBox);
 
-        // Adding the TextView to the RelativeLayout as a child and make the layout clickable
-        newButton.addView(teamName, 0);
+        // Create a new Button
+        TextView newButton = new TextView(this);
+        newButton.setText(playlistName);
         newButton.setGravity(Gravity.CENTER_VERTICAL);
-        newButton.setLayoutParams(buttonParams);
+        newButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, 50);
+        newButton.setTypeface(ResourcesCompat.getFont(this,R.font.carter_one));
+        newButton.setLines(1);
+        newButton.setHorizontallyScrolling(true);
+        newButton.setMarqueeRepeatLimit(-1);
+        newButton.setFocusable(true);
+        newButton.setFocusableInTouchMode(true);
+        newButton.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+
+        newButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         if (origin == DEEZER)
         {
-            newButton.setBackgroundColor(getResources().getColor(R.color.deezerColor));
+            newButton.setTextColor(getResources().getColor(R.color.deezerColor));
+            CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
+            checkBox.setId(deezerPlaylistnumber);
             deezerPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(250);
             anim.setStartOffset(250*deezerPlaylistnumber);
-            newButton.startAnimation(anim);
+            newPlaylist.startAnimation(anim);
         }
         else if (origin == SPOTIFY)
         {
-            newButton.setBackgroundColor(getResources().getColor(R.color.spotifyColor));
+            newButton.setTextColor(getResources().getColor(R.color.spotifyColor));
+            CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
+            checkBox.setId(spotifyPlaylistnumber - 1);
             spotifyPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(250);
             anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber));
-            newButton.startAnimation(anim);
+            newPlaylist.startAnimation(anim);
         }
-        else
+        else if (origin == FOLDER)
         {
-            newButton.setBackgroundColor(getResources().getColor(R.color.folderColor));
+            newButton.setTextColor(getResources().getColor(R.color.folderColor));
+            CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.folderColor)));
+            checkBox.setId(folderPlaylistnumber - 1);
             folderPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(250);
             anim.setStartOffset(250*folderPlaylistnumber);
-            newButton.startAnimation(anim);
+            newPlaylist.startAnimation(anim);
         }
 
+        newPlaylist.addView(checkboxLayout);
+        newPlaylist.addView(newButton);
+
         // Add the RelativeLayout to the main LinearLayout
-        playlistLayout.addView(newButton);
+        playlistLayout.addView(newPlaylist);
     }
 
     public class SpotifyCrawler extends AsyncTask<String, Void, String>
@@ -358,10 +417,12 @@ public class SetupPlaylist extends BaseActivity
                         {
                             addTitle("Spotify");
                             addPlaylist(SPOTIFY,"Musique préférées");
+                            spotifyPlaylistList.add("spotifyLovedSongs");
 
                             for (int i = 0 ; i < playlistJSONList.length() ; i++)
                             {
-                                addPlaylist(SPOTIFY,(String) playlistJSONList.optJSONObject(i).get("name"));
+                                spotifyPlaylistList.add(playlistJSONList.optJSONObject(i).getString("id"));
+                                addPlaylist(SPOTIFY, playlistJSONList.optJSONObject(i).getString("name"));
                             }
                         }
                     }

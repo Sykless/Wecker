@@ -1,7 +1,10 @@
 package com.fpalud.wecker;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -9,7 +12,6 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.Toast;
 
 import com.deezer.sdk.model.Permissions;
 import com.deezer.sdk.network.connect.DeezerConnect;
@@ -34,7 +36,7 @@ import java.net.URL;
 
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
-public class CreateAlarm extends BaseActivity
+public class MusicOrigin extends BaseActivity
 {
     CheckBox deezerBox;
     CheckBox spotifyBox;
@@ -70,31 +72,28 @@ public class CreateAlarm extends BaseActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.create_alarm_layout);
+        setContentView(R.layout.music_origin_layout);
 
         deezerBox = findViewById(R.id.deezerBox);
         spotifyBox = findViewById(R.id.spotifyBox);
         folderBox = findViewById(R.id.folderBox);
 
+        deezerConnect = new DeezerConnect(this, "315304");
+        deezerConnected = new SessionStore().restore(deezerConnect, this);
+
+        new SpotifyCrawler().execute("me");
+
+        System.out.println("Deezer Connected : " + deezerConnected);
+
         // TODO : Make validate button not clickable if nothing is selected
     }
 
-    public void deezerBoxChecked(View view)
+    private boolean isNetworkAvailable()
     {
-        deezerConnect = new DeezerConnect(this, "315304");
-        SessionStore sessionStore = new SessionStore();
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 
-        deezerConnected = sessionStore.restore(deezerConnect, this);
-    }
-
-    public void spotifyBoxChecked(View view)
-    {
-        new SpotifyCrawler().execute("me");
-    }
-
-    public void folderBoxChecked(View view)
-    {
-        folderConnected = false;
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     public void clickValidate(View view)
@@ -103,7 +102,26 @@ public class CreateAlarm extends BaseActivity
         spotifyChecked = spotifyBox.isChecked();
         folderChecked = folderBox.isChecked();
 
-        connectionSetup(INIT, true);
+        if (!isNetworkAvailable() && (deezerChecked || spotifyChecked))
+        {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            builder.setMessage("Ces fonctionnalités nécéssitent une connexion Internet.\n\nVérifiez votre connexion et rééssayez.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+                            //do things
+                        }
+                    });
+
+            AlertDialog alert = builder.create();
+            alert.show();
+        }
+        else
+        {
+            connectionSetup(INIT, true);
+        }
     }
 
     public void connectionSetup(int origin, boolean connection)
@@ -116,7 +134,6 @@ public class CreateAlarm extends BaseActivity
             }
             else if (spotifyChecked)
             {
-                System.out.println(origin + " " +  deezerChecked);
                 spotifyConnectionCheck();
             }
             else
@@ -306,21 +323,6 @@ public class CreateAlarm extends BaseActivity
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-
-        if (installingSpotify)
-        {
-            installingSpotify = false;
-            if (SpotifyAppRemote.isSpotifyInstalled(app))
-            {
-                spotifyConnectionCheck();
-            }
-        }
-
-    }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent)
     {
@@ -357,7 +359,7 @@ public class CreateAlarm extends BaseActivity
                             @Override
                             public void onFailure(Throwable throwable)
                             {
-                                Log.e("CreateAlarm", throwable.getMessage(), throwable);
+                                Log.e("MusicOrigin", throwable.getMessage(), throwable);
                                 connectionSetup(SPOTIFY,false);
                             }
                         });
@@ -418,6 +420,9 @@ public class CreateAlarm extends BaseActivity
 
             spotifyConnected = (server_response.length() > 0);
             spotifyAPKConnected = (app.getSpotifyConnect() != null);
+
+            System.out.println("Spotify Connected : " + spotifyConnected);
+            System.out.println("Spotify APK Connected : " + spotifyAPKConnected);
 
             spotifyConnectionChecked = true;
         }

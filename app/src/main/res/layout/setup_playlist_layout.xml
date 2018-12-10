@@ -7,75 +7,69 @@
     android:background="@color/ic_launcher_background"
     tools:context=".SetupPlaylist">
 
-    <TextView
-        android:id="@+id/selectText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="25dp"
-        android:layout_marginEnd="25dp"
-        android:gravity="center"
-        android:text="Sélectionnez un choix\nde playlists :"
-        android:textColor="#FFFFFF"
-        android:textSize="25sp"
-        app:fontFamily="@font/carter_one"
-        app:layout_constraintBottom_toTopOf="@+id/playlistScrollView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ScrollView
-        android:id="@+id/playlistScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/textLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/selectText">
-
-        <LinearLayout
-            android:id="@+id/playlistLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical" />
-    </ScrollView>
-
     <LinearLayout
         android:id="@+id/textLayout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:layout_marginTop="16dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/randomSongLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingEnd="25dp">
+
+                <CheckBox
+                    android:id="@+id/randomSongCheck"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/white"
+                    android:checked="true"
+                    android:scaleX="1.5"
+                    android:scaleY="1.5" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/randomSongText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Musique aléatoire"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="25sp"
+                app:fontFamily="@font/carter_one" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/randomPlaylistLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingTop="5dp">
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingStart="25dp"
-                android:paddingLeft="25dp"
-                android:paddingEnd="25dp"
-                android:paddingRight="25dp">
+                android:paddingEnd="25dp">
 
                 <CheckBox
                     android:id="@+id/randomPlaylistCheck"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:buttonTint="@color/ic_launcher_background"
+                    android:buttonTint="@color/white"
                     android:checked="true"
                     android:scaleX="1.5"
                     android:scaleY="1.5" />
@@ -87,49 +81,65 @@
                 android:layout_height="wrap_content"
                 android:text="Playlist aléatoire"
                 android:textAllCaps="false"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/white"
                 android:textSize="25sp"
                 app:fontFamily="@font/carter_one" />
         </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textReadFrom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center"
+        android:text="Lire la musique depuis :"
+        android:textColor="#FFFFFF"
+        android:textSize="25sp"
+        app:fontFamily="@font/carter_one"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textLayout" />
+
+    <ScrollView
+        android:id="@+id/playlistScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@+id/validateButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textReadFrom">
 
         <LinearLayout
-            android:id="@+id/randomSongtLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingBottom="5dp">
+            android:id="@+id/playlistLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" />
+    </ScrollView>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingStart="25dp"
-                android:paddingLeft="25dp"
-                android:paddingEnd="25dp"
-                android:paddingRight="25dp">
+    <Button
+        android:id="@+id/validateButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="25dp"
+        android:backgroundTint="#FFFFFF"
+        android:gravity="center"
+        android:onClick="goToNext"
+        android:padding="15dp"
+        android:text="Valider"
+        android:textAllCaps="false"
+        android:textColor="@color/ic_launcher_background"
+        android:textSize="40sp"
+        app:fontFamily="@font/carter_one"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-                <CheckBox
-                    android:id="@+id/randomSongtCheck"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:buttonTint="@color/ic_launcher_background"
-                    android:checked="true"
-                    android:scaleX="1.5"
-                    android:scaleY="1.5" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/randomSongtText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Musique aléatoire"
-                android:textAllCaps="false"
-                android:textColor="@color/ic_launcher_background"
-                android:textSize="25sp"
-                app:fontFamily="@font/carter_one" />
-        </LinearLayout>
-
-
-    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
