@@ -14,6 +14,8 @@ public class WeckerParameters  extends Application
     String spotifyToken = "";
     SpotifyAppRemote spotifyConnect;
 
+    String musicFolderPath = "";
+
     @Override
     public void onCreate()
     {
@@ -21,6 +23,7 @@ public class WeckerParameters  extends Application
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         spotifyToken = sharedPrefs.getString("spotifyToken","");
+        musicFolderPath = sharedPrefs.getString("musicFolderPath","");
 
         if (spotifyToken.length() > 0)
         {
@@ -49,7 +52,6 @@ public class WeckerParameters  extends Application
     }
 
 
-
     public SpotifyAppRemote getSpotifyConnect()
     {
         return spotifyConnect;
@@ -63,6 +65,21 @@ public class WeckerParameters  extends Application
     public String getSpotifyToken()
     {
         return spotifyToken;
+    }
+
+    public String getMusicFolderPath()
+    {
+        return musicFolderPath;
+    }
+
+    public void setMusicFolderPath(String musicFolderPath)
+    {
+        this.musicFolderPath = musicFolderPath;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("musicFolderPath",musicFolderPath);
+        editor.apply();
     }
 
     public void setSpotifyToken(String spotifyToken)

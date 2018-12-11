@@ -3,11 +3,14 @@ package com.fpalud.wecker;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -27,12 +30,16 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import yogesh.firzen.filelister.FileListerDialog;
+import yogesh.firzen.filelister.OnFileSelectedListener;
 
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
@@ -53,9 +60,9 @@ public class MusicOrigin extends BaseActivity
     boolean deezerConnected = false;
     boolean spotifyConnected = false;
     boolean spotifyAPKConnected = false;
-    boolean folderConnected = false;
 
     boolean installingSpotify = false;
+    boolean grantingPermission = false;
 
     private static final int INIT = -1;
     private static final int DEEZER = 0;
@@ -67,6 +74,7 @@ public class MusicOrigin extends BaseActivity
 
     WeckerParameters app;
     DeezerConnect deezerConnect;
+    FileListerDialog fileListerDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -78,14 +86,54 @@ public class MusicOrigin extends BaseActivity
         spotifyBox = findViewById(R.id.spotifyBox);
         folderBox = findViewById(R.id.folderBox);
 
-        deezerConnect = new DeezerConnect(this, "315304");
-        deezerConnected = new SessionStore().restore(deezerConnect, this);
+        fileListerDialog = FileListerDialog.createFileListerDialog(this);
+        fileListerDialog.setOnFileSelectedListener(new OnFileSelectedListener() {
+            @Override
+            public void onFileSelected(File file, String path)
+            {
+                app.setMusicFolderPath(path);
+                connectionSetup(FOLDER, app.getMusicFolderPath().length() > 0);
+            }
+        });
 
-        new SpotifyCrawler().execute("me");
-
-        System.out.println("Deezer Connected : " + deezerConnected);
+        fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
+        fileListerDialog.setFileFilter(FileListerDialog.FILE_FILTER.ALL_FILES);
 
         // TODO : Make validate button not clickable if nothing is selected
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        if (installingSpotify)
+        {
+            installingSpotify = false;
+            if (SpotifyAppRemote.isSpotifyInstalled(app))
+            {
+                spotifyConnectionCheck();
+            }
+        }
+        else if (grantingPermission)
+        {
+            grantingPermission = false;
+            if (isReadPermissionEnabled())
+            {
+                folderConnectionCheck();
+            }
+        }
+        else
+        {
+            app = (WeckerParameters) getApplicationContext();
+
+            deezerConnect = new DeezerConnect(this, "315304");
+            deezerConnected = new SessionStore().restore(deezerConnect, this);
+
+            new SpotifyCrawler().execute("me");
+
+            System.out.println("Deezer Connected : " + deezerConnected);
+        }
     }
 
     private boolean isNetworkAvailable()
@@ -94,6 +142,12 @@ public class MusicOrigin extends BaseActivity
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private boolean isReadPermissionEnabled()
+    {
+        String requiredPermission = "android.permission.READ_EXTERNAL_STORAGE";
+        return (getApplicationContext().checkCallingOrSelfPermission(requiredPermission) == PackageManager.PERMISSION_GRANTED);
     }
 
     public void clickValidate(View view)
@@ -109,10 +163,7 @@ public class MusicOrigin extends BaseActivity
             builder.setMessage("Ces fonctionnalités nécéssitent une connexion Internet.\n\nVérifiez votre connexion et rééssayez.")
                     .setPositiveButton("OK", new DialogInterface.OnClickListener()
                     {
-                        public void onClick(DialogInterface dialog, int id)
-                        {
-                            //do things
-                        }
+                        public void onClick(DialogInterface dialog, int id) {}
                     });
 
             AlertDialog alert = builder.create();
@@ -138,7 +189,7 @@ public class MusicOrigin extends BaseActivity
             }
             else
             {
-                // folderConnectionCheck();
+                folderConnectionCheck();
             }
         }
 
@@ -152,11 +203,14 @@ public class MusicOrigin extends BaseActivity
             }
             else if (folderChecked)
             {
-                // folderConnectionCheck();
+                folderConnectionCheck();
             }
             else
             {
-                goToSetupPlaylist();
+                if (deezerChecked)
+                {
+                    goToSetupPlaylist();
+                }
             }
         }
 
@@ -166,18 +220,25 @@ public class MusicOrigin extends BaseActivity
 
             if (folderChecked)
             {
-                // folderConnectionCheck();
+                folderConnectionCheck();
             }
             else
             {
-                goToSetupPlaylist();
+                if (deezerChecked || spotifyChecked)
+                {
+                    goToSetupPlaylist();
+                }
             }
         }
 
         if (origin == FOLDER)
         {
             folderChecked = connection;
-            goToSetupPlaylist();
+
+            if (deezerChecked || spotifyChecked || folderChecked)
+            {
+                goToSetupPlaylist();
+            }
         }
     }
 
@@ -193,6 +254,10 @@ public class MusicOrigin extends BaseActivity
                     {
                         deezerConnected = true;
                         deezerConnection();
+                    }
+                    else
+                    {
+                        connectionSetup(DEEZER, false);
                     }
                 }
             };
@@ -277,6 +342,10 @@ public class MusicOrigin extends BaseActivity
                             startActivity(new Intent(Intent.ACTION_VIEW, uri));
                         }
                     }
+                    else
+                    {
+                        connectionSetup(SPOTIFY, false);
+                    }
                 }
             };
 
@@ -297,6 +366,10 @@ public class MusicOrigin extends BaseActivity
                         {
                             spotifyConnected = true;
                             spotifyConnection();
+                        }
+                        else
+                        {
+                            connectionSetup(SPOTIFY, false);
                         }
                     }
                 };
@@ -323,6 +396,62 @@ public class MusicOrigin extends BaseActivity
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
+    public void folderConnectionCheck()
+    {
+        app = (WeckerParameters) getApplicationContext();
+
+        if (!isReadPermissionEnabled())
+        {
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    if (which == DialogInterface.BUTTON_POSITIVE)
+                    {
+                        grantingPermission = true;
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package", getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                    }
+                    else
+                    {
+                        connectionSetup(FOLDER, false);
+                    }
+                }
+            };
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Vous devez accorder la permission à l'application d'accéder à vos fichiers.\n\nSe rendre dans les paramètres ?").setNegativeButton("Non", dialogClickListener)
+                    .setPositiveButton("Oui", dialogClickListener).show();
+        }
+        else if (app.getMusicFolderPath().length() == 0)
+        {
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    if (which == DialogInterface.BUTTON_POSITIVE)
+                    {
+                        fileListerDialog.show();
+                    }
+                    else
+                    {
+                        connectionSetup(FOLDER, false);
+                    }
+                }
+            };
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Paramétrer la localisation du dossier Musique ?").setNegativeButton("Non", dialogClickListener)
+                    .setPositiveButton("Oui", dialogClickListener).show();
+        }
+        else
+        {
+            connectionSetup(FOLDER, true);
+        }
+    }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent)
     {
