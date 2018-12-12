@@ -9,82 +9,120 @@
 
     <LinearLayout
         android:id="@+id/textLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:orientation="vertical"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/randomSongLayout"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/musicText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Musique"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                app:fontFamily="@font/carter_one" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingEnd="25dp">
+                android:orientation="horizontal"
+                android:layout_alignParentEnd="true">
 
-                <CheckBox
-                    android:id="@+id/randomSongCheck"
+                <TextView
+                    android:id="@+id/randomSongText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:buttonTint="@color/white"
-                    android:checked="true"
-                    android:scaleX="1.5"
-                    android:scaleY="1.5" />
+                    android:text="aléatoire"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:paddingStart="5dp"
+                    app:fontFamily="@font/carter_one" />
+
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/songSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:theme="@style/SwitchTheme" />
+
+                <TextView
+                    android:id="@+id/determinedSongText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="déterminée"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    app:fontFamily="@font/carter_one" />
             </LinearLayout>
+        </RelativeLayout>
 
-            <TextView
-                android:id="@+id/randomSongText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Musique aléatoire"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="25sp"
-                app:fontFamily="@font/carter_one" />
-        </LinearLayout>
-
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/randomPlaylistLayout"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/playlistText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Playlist"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                app:fontFamily="@font/carter_one" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingEnd="25dp">
+                android:orientation="horizontal"
+                android:layout_alignParentEnd="true">
 
-                <CheckBox
-                    android:id="@+id/randomPlaylistCheck"
+                <TextView
+                    android:id="@+id/randomPlaylistText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:buttonTint="@color/white"
-                    android:checked="true"
-                    android:scaleX="1.5"
-                    android:scaleY="1.5" />
-            </LinearLayout>
+                    android:text="aléatoire"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:paddingStart="5dp"
+                    app:fontFamily="@font/carter_one" />
 
-            <TextView
-                android:id="@+id/randomPlaylistText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Playlist aléatoire"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="25sp"
-                app:fontFamily="@font/carter_one" />
-        </LinearLayout>
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/playlistSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:theme="@style/SwitchTheme" />
+
+                <TextView
+                    android:id="@+id/determinedPlaylistText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="déterminée"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    app:fontFamily="@font/carter_one" />
+            </LinearLayout>
+        </RelativeLayout>
     </LinearLayout>
 
     <TextView

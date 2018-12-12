@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.widget.AppCompatButton;
+import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -45,14 +47,18 @@ import java.util.List;
 public class SetupPlaylist extends BaseActivity
 {
     LinearLayout playlistLayout;
+    SwitchCompat songSwitch;
+    SwitchCompat playlistSwitch;
+    TextView randomSongText;
+    TextView randomPlaylistText;
+    TextView determinedSongText;
+    TextView determinedPlaylistText;
+    ArrayList<CheckBox> checkboxList = new ArrayList<>();
 
     private static final int INIT = -1;
     private static final int DEEZER = 0;
     private static final int SPOTIFY = 1;
     private static final int FOLDER = 2;
-
-    private static final int REQUEST_CODE = 1337;
-    private static final String REDIRECT_URI = "wecker://callback";
 
     Boolean deezerChecked;
     Boolean spotifyChecked;
@@ -80,9 +86,81 @@ public class SetupPlaylist extends BaseActivity
         spotifyChecked = intent.getBooleanExtra("spotify",false);
         folderChecked = intent.getBooleanExtra("folder",false);
 
+        songSwitch = findViewById(R.id.songSwitch);
+        playlistSwitch = findViewById(R.id.playlistSwitch);
+        randomSongText = findViewById(R.id.randomSongText);
+        randomPlaylistText = findViewById(R.id.randomPlaylistText);
+        determinedSongText = findViewById(R.id.determinedSongText);
+        determinedPlaylistText = findViewById(R.id.determinedPlaylistText);
+
         playlistLayout = findViewById(R.id.playlistLayout);
 
+        songSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+            {
+                checkSwitch();
+            }
+        });
+
+        playlistSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+            {
+                checkSwitch();
+
+                if (isChecked)
+                {
+                    idList.clear();
+
+                    for (int i = 0 ; i < checkboxList.size() ; i++)
+                    {
+                        checkboxList.get(i).setChecked(false);
+                    }
+                }
+            }
+        });
+
         connectionSetup(INIT);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        checkSwitch();
+    }
+
+    public void checkSwitch()
+    {
+        if (songSwitch.isChecked())
+        {
+            determinedPlaylistText.setAlpha(1f);
+            randomPlaylistText.setAlpha(0.5f);
+            determinedSongText.setAlpha(1f);
+            randomSongText.setAlpha(0.5f);
+            playlistSwitch.setChecked(true);
+            playlistSwitch.setClickable(false);
+            playlistSwitch.setAlpha(0.5f);
+        }
+        else
+        {
+            determinedSongText.setAlpha(0.5f);
+            randomSongText.setAlpha(1f);
+            playlistSwitch.setClickable(true);
+            playlistSwitch.setAlpha(1f);
+        }
+
+        if (playlistSwitch.isChecked())
+        {
+            determinedPlaylistText.setAlpha(1f);
+            randomPlaylistText.setAlpha(0.5f);
+        }
+        else
+        {
+            determinedPlaylistText.setAlpha(0.5f);
+            randomPlaylistText.setAlpha(1f);
+        }
     }
 
     public void goToNext(View view)
@@ -106,7 +184,7 @@ public class SetupPlaylist extends BaseActivity
             }
             else
             {
-                // getFolderSongs();
+                getFolderSongs();
             }
         }
 
@@ -118,7 +196,7 @@ public class SetupPlaylist extends BaseActivity
             }
             else if (folderChecked)
             {
-                // folderConnection();
+                getFolderSongs();
             }
         }
 
@@ -126,7 +204,7 @@ public class SetupPlaylist extends BaseActivity
         {
             if (folderChecked)
             {
-                // folderConnection();
+                getFolderSongs();
             }
         }
     }
@@ -165,7 +243,7 @@ public class SetupPlaylist extends BaseActivity
                     }
                     else if (folderChecked)
                     {
-                        // folderConnection();
+                        getFolderSongs();
                     }
                 }
 
@@ -205,6 +283,12 @@ public class SetupPlaylist extends BaseActivity
         return 0;
     }
 
+    public void getFolderSongs()
+    {
+        addTitle("Dossier Musique");
+        addPlaylist(FOLDER,"Liste des musiques");
+    }
+
     public void addTitle(String title)
     {
         // Creating a new TextView
@@ -234,6 +318,10 @@ public class SetupPlaylist extends BaseActivity
         }
         else
         {
+            AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+            anim.setDuration(250);
+            anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber + 1));
+            teamName.startAnimation(anim);
             teamName.setTextColor(getResources().getColor(R.color.folderColor));
         }
 
@@ -259,6 +347,19 @@ public class SetupPlaylist extends BaseActivity
         {
             public void onClick(View v)
             {
+                if (playlistSwitch.isChecked() && ((CheckBox) v).isChecked())
+                {
+                    for (int i = 0 ; i < checkboxList.size() ; i++)
+                    {
+                        if (i != checkboxList.indexOf(((CheckBox) v)))
+                        {
+                            checkboxList.get(i).setChecked(false);
+                        }
+                    }
+
+                    idList.clear();
+                }
+
                 if (origin == DEEZER)
                 {
                     if (((CheckBox) v).isChecked())
@@ -284,15 +385,21 @@ public class SetupPlaylist extends BaseActivity
                 }
                 else if (origin == FOLDER)
                 {
-                    // Do things
+                    if (((CheckBox) v).isChecked())
+                    {
+                        idList.add("folderMusic");
+                    }
+                    else
+                    {
+                        idList.remove("folderMusic");
+                    }
                 }
-
-                System.out.println(idList);
             }
         });
 
         LinearLayout.LayoutParams boxParameters = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         checkBox.setLayoutParams(boxParameters);
+        checkboxList.add(checkBox);
 
         // Create a LinearLayout for the CheckBox
         LinearLayout checkboxLayout = new LinearLayout(this);
@@ -349,7 +456,7 @@ public class SetupPlaylist extends BaseActivity
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(250);
-            anim.setStartOffset(250*folderPlaylistnumber);
+            anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber + 2));
             newPlaylist.startAnimation(anim);
         }
 
@@ -423,6 +530,11 @@ public class SetupPlaylist extends BaseActivity
                             {
                                 spotifyPlaylistList.add(playlistJSONList.optJSONObject(i).getString("id"));
                                 addPlaylist(SPOTIFY, playlistJSONList.optJSONObject(i).getString("name"));
+                            }
+
+                            if (folderChecked)
+                            {
+                                getFolderSongs();
                             }
                         }
                     }

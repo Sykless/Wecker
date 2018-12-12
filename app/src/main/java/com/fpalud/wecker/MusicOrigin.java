@@ -98,8 +98,6 @@ public class MusicOrigin extends BaseActivity
 
         fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
         fileListerDialog.setFileFilter(FileListerDialog.FILE_FILTER.ALL_FILES);
-
-        // TODO : Make validate button not clickable if nothing is selected
     }
 
     @Override
@@ -169,7 +167,7 @@ public class MusicOrigin extends BaseActivity
             AlertDialog alert = builder.create();
             alert.show();
         }
-        else
+        else if (deezerChecked || spotifyChecked || folderChecked)
         {
             connectionSetup(INIT, true);
         }
