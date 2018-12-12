@@ -246,26 +246,7 @@ public class MusicOrigin extends BaseActivity
     {
         if (!deezerConnected)
         {
-            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    if (which == DialogInterface.BUTTON_POSITIVE)
-                    {
-                        deezerConnected = true;
-                        deezerConnection();
-                    }
-                    else
-                    {
-                        connectionSetup(DEEZER, false);
-                    }
-                }
-            };
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Voulez-vous vous connecter à Deezer ?").setNegativeButton("Non", dialogClickListener)
-                    .setPositiveButton("Oui", dialogClickListener).show();
-
+            deezerConnection();
         }
         else
         {
@@ -285,6 +266,7 @@ public class MusicOrigin extends BaseActivity
         // The listener for authentication events
         DialogListener listener = new DialogListener() {
             public void onComplete(Bundle values) {
+                deezerConnected = true;
                 SessionStore sessionStore = new SessionStore();
                 sessionStore.save(deezerConnect, getApplicationContext());
 
@@ -357,26 +339,7 @@ public class MusicOrigin extends BaseActivity
         {
             if (!spotifyConnected || !spotifyAPKConnected)
             {
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        if (which == DialogInterface.BUTTON_POSITIVE)
-                        {
-                            spotifyConnected = true;
-                            spotifyConnection();
-                        }
-                        else
-                        {
-                            connectionSetup(SPOTIFY, false);
-                        }
-                    }
-                };
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Voulez-vous vous connecter à Spotify ?").setNegativeButton("Non", dialogClickListener)
-                        .setPositiveButton("Oui", dialogClickListener).show();
+                spotifyConnection();
             }
             else
             {
@@ -444,7 +407,7 @@ public class MusicOrigin extends BaseActivity
             };
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Paramétrer la localisation du dossier Musique ?").setNegativeButton("Non", dialogClickListener)
+            builder.setMessage("Localiser le dossier Musique ?").setNegativeButton("Non", dialogClickListener)
                     .setPositiveButton("Oui", dialogClickListener).show();
         }
         else
@@ -467,6 +430,8 @@ public class MusicOrigin extends BaseActivity
                 app = (WeckerParameters) getApplicationContext();
                 app.setSpotifyToken(response.getAccessToken());
 
+                spotifyConnected = true;
+
                 // You only need to connect to SpotifyAppRemote to play music
                 ConnectionParams connectionParams =
                         new ConnectionParams.Builder("46065021347f4ef3bd007487a2497d2f")
@@ -480,6 +445,8 @@ public class MusicOrigin extends BaseActivity
                             @Override
                             public void onConnected(SpotifyAppRemote spotifyAppRemote)
                             {
+                                spotifyAPKConnected = true;
+
                                 app.setSpotifyConnect(spotifyAppRemote);
                                 SpotifyAppRemote.disconnect(spotifyAppRemote);
                                 connectionSetup(SPOTIFY,true);
