@@ -54,6 +54,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="5"
             android:adjustViewBounds="true"
+            android:clickable="true"
+            android:focusable="true"
             app:srcCompat="@drawable/deezer" />
 
         <View
@@ -95,6 +97,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="5"
             android:adjustViewBounds="true"
+            android:clickable="true"
+            android:focusable="true"
             app:srcCompat="@drawable/spotify" />
 
         <View
@@ -136,6 +140,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="5"
             android:adjustViewBounds="true"
+            android:clickable="true"
+            android:focusable="true"
             app:srcCompat="@drawable/music_folder" />
 
         <View

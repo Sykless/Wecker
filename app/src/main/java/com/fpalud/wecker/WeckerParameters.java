@@ -11,6 +11,7 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class WeckerParameters  extends Application
 {

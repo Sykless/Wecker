@@ -14,7 +14,9 @@ import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 
 import com.deezer.sdk.model.Permissions;
 import com.deezer.sdk.network.connect.DeezerConnect;
@@ -48,6 +50,13 @@ public class MusicOrigin extends BaseActivity
     CheckBox deezerBox;
     CheckBox spotifyBox;
     CheckBox folderBox;
+
+    ImageView deezerImage;
+    ImageView spotifyImage;
+    ImageView folderImage;
+
+    AlphaAnimation buttonClick = new AlphaAnimation(1F, 0.7F); // Fading animation on image when clicked
+    AlphaAnimation buttonClickRelease = new AlphaAnimation(0.7F,1F); // Unfading animation on image when clicked
 
     boolean deezerChecked;
     boolean spotifyChecked;
@@ -85,6 +94,68 @@ public class MusicOrigin extends BaseActivity
         deezerBox = findViewById(R.id.deezerBox);
         spotifyBox = findViewById(R.id.spotifyBox);
         folderBox = findViewById(R.id.folderBox);
+
+        deezerImage = findViewById(R.id.deezerImage);
+        spotifyImage = findViewById(R.id.spotifyImage);
+        folderImage = findViewById(R.id.folderImage);
+
+        buttonClick.setDuration(100);
+        buttonClickRelease.setDuration(100);
+        buttonClickRelease.setStartOffset(100);
+
+        deezerImage.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                if (deezerBox.isChecked())
+                {
+                    deezerBox.setChecked(false);
+                }
+                else
+                {
+                    deezerBox.setChecked(true);
+                }
+
+                v.startAnimation(buttonClick);
+                v.startAnimation(buttonClickRelease);
+            }
+        });
+
+        spotifyImage.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                v.startAnimation(buttonClick);
+                v.startAnimation(buttonClickRelease);
+
+                if (spotifyBox.isChecked())
+                {
+                    spotifyBox.setChecked(false);
+                }
+                else
+                {
+                    spotifyBox.setChecked(true);
+                }
+            }
+        });
+
+        folderImage.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                v.startAnimation(buttonClick);
+                v.startAnimation(buttonClickRelease);
+
+                if (folderBox.isChecked())
+                {
+                    folderBox.setChecked(false);
+                }
+                else
+                {
+                    folderBox.setChecked(true);
+                }
+            }
+        });
 
         fileListerDialog = FileListerDialog.createFileListerDialog(this);
         fileListerDialog.setOnFileSelectedListener(new OnFileSelectedListener() {

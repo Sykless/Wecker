@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
-public class SetupAlarm extends AppCompatActivity
+public class SetupAlarm extends BaseActivity
 {
     WeckerParameters app;
     DeezerConnect deezerConnect;
@@ -49,13 +49,7 @@ public class SetupAlarm extends AppCompatActivity
     ArrayList<Integer> trackNumber = new ArrayList<>();
     Collection<File> musicList;
 
-    Button buttonLundi;
-    Button buttonMardi;
-    Button buttonMercredi;
-    Button buttonJeudi;
-    Button buttonVendredi;
-    Button buttonSamedi;
-    Button buttonDimanche;
+    ArrayList<Button> dayButtons = new ArrayList<>();
     List<Boolean> buttonClicked = new ArrayList<>(Arrays.asList(false, false, false, false, false, false, false));
 
     int id = 0;
@@ -71,139 +65,39 @@ public class SetupAlarm extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.setup_alarm_layout);
 
-        buttonLundi = findViewById(R.id.lundi);
-        buttonMardi = findViewById(R.id.mardi);
-        buttonMercredi = findViewById(R.id.mercredi);
-        buttonJeudi = findViewById(R.id.jeudi);
-        buttonVendredi = findViewById(R.id.vendredi);
-        buttonSamedi = findViewById(R.id.samedi);
-        buttonDimanche = findViewById(R.id.dimanche);
+        dayButtons.add((Button) findViewById(R.id.lundi));
+        dayButtons.add((Button) findViewById(R.id.mardi));
+        dayButtons.add((Button) findViewById(R.id.mercredi));
+        dayButtons.add((Button) findViewById(R.id.jeudi));
+        dayButtons.add((Button) findViewById(R.id.vendredi));
+        dayButtons.add((Button) findViewById(R.id.samedi));
+        dayButtons.add((Button) findViewById(R.id.dimanche));
 
-        buttonLundi.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener buttonClick =  new View.OnClickListener()
+        {
             public void onClick(View v)
             {
-                if (buttonClicked.get(0))
+                int id = dayButtons.indexOf((Button) v);
+
+                if (buttonClicked.get(id))
                 {
-                    buttonClicked.set(0, false);
-                    buttonLundi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonLundi.setTextColor(getResources().getColor(R.color.blue));
+                    buttonClicked.set(id, false);
+                    v.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
+                    ((Button) v).setTextColor(getResources().getColor(R.color.blue));
                 }
                 else
                 {
-                    buttonClicked.set(0, true);
-                    buttonLundi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonLundi.setTextColor(getResources().getColor(R.color.white));
+                    buttonClicked.set(id, true);
+                    v.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
+                    ((Button) v).setTextColor(getResources().getColor(R.color.white));
                 }
             }
-        });
+        };
 
-        buttonMardi.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
-                if (buttonClicked.get(1))
-                {
-                    buttonClicked.set(1, false);
-                    buttonMardi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonMardi.setTextColor(getResources().getColor(R.color.blue));
-                }
-                else
-                {
-                    buttonClicked.set(1, true);
-                    buttonMardi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonMardi.setTextColor(getResources().getColor(R.color.white));
-                }
-            }
-        });
-
-        buttonMercredi.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
-                if (buttonClicked.get(2))
-                {
-                    buttonClicked.set(2, false);
-                    buttonMercredi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonMercredi.setTextColor(getResources().getColor(R.color.blue));
-                }
-                else
-                {
-                    buttonClicked.set(2, true);
-                    buttonMercredi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonMercredi.setTextColor(getResources().getColor(R.color.white));
-                }
-            }
-        });
-
-        buttonJeudi.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
-                if (buttonClicked.get(3))
-                {
-                    buttonClicked.set(3, false);
-                    buttonJeudi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonJeudi.setTextColor(getResources().getColor(R.color.blue));
-                }
-                else
-                {
-                    buttonClicked.set(3, true);
-                    buttonJeudi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonJeudi.setTextColor(getResources().getColor(R.color.white));
-                }
-            }
-        });
-
-        buttonVendredi.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
-                if (buttonClicked.get(4))
-                {
-                    buttonClicked.set(4, false);
-                    buttonVendredi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonVendredi.setTextColor(getResources().getColor(R.color.blue));
-                }
-                else
-                {
-                    buttonClicked.set(4, true);
-                    buttonVendredi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonVendredi.setTextColor(getResources().getColor(R.color.white));
-                }
-            }
-        });
-
-        buttonSamedi.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
-                if (buttonClicked.get(5))
-                {
-                    buttonClicked.set(5, false);
-                    buttonSamedi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonSamedi.setTextColor(getResources().getColor(R.color.blue));
-                }
-                else
-                {
-                    buttonClicked.set(5, true);
-                    buttonSamedi.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonSamedi.setTextColor(getResources().getColor(R.color.white));
-                }
-            }
-        });
-
-        buttonDimanche.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
-                if (buttonClicked.get(6))
-                {
-                    buttonClicked.set(6, false);
-                    buttonDimanche.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    buttonDimanche.setTextColor(getResources().getColor(R.color.blue));
-                }
-                else
-                {
-                    buttonClicked.set(6, true);
-                    buttonDimanche.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    buttonDimanche.setTextColor(getResources().getColor(R.color.white));
-                }
-            }
-        });
+        for (Button button : dayButtons)
+        {
+            button.setOnClickListener(buttonClick);
+        }
 
         Intent intent = getIntent();
         idList = intent.getStringArrayListExtra("idList");

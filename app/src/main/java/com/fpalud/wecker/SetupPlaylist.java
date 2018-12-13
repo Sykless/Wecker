@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.ColorFilter;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v4.content.res.ResourcesCompat;
 import android.os.Bundle;
 import android.support.v4.view.ViewCompat;
@@ -21,20 +22,25 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.deezer.sdk.model.Playlist;
+import com.deezer.sdk.model.Track;
 import com.deezer.sdk.network.connect.DeezerConnect;
 import com.deezer.sdk.network.connect.SessionStore;
 import com.deezer.sdk.network.request.DeezerRequest;
 import com.deezer.sdk.network.request.DeezerRequestFactory;
 import com.deezer.sdk.network.request.event.JsonRequestListener;
 import com.deezer.sdk.network.request.event.RequestListener;
+import com.google.gson.JsonObject;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,6 +48,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class SetupPlaylist extends BaseActivity
@@ -49,11 +56,13 @@ public class SetupPlaylist extends BaseActivity
     LinearLayout playlistLayout;
     SwitchCompat songSwitch;
     SwitchCompat playlistSwitch;
+    ProgressBar loadingBar;
     TextView randomSongText;
     TextView randomPlaylistText;
     TextView determinedSongText;
     TextView determinedPlaylistText;
     ArrayList<CheckBox> checkboxList = new ArrayList<>();
+    ArrayList<Button> buttonList = new ArrayList<>();
 
     private static final int INIT = -1;
     private static final int DEEZER = 0;
@@ -63,6 +72,10 @@ public class SetupPlaylist extends BaseActivity
     Boolean deezerChecked;
     Boolean spotifyChecked;
     Boolean folderChecked;
+    Boolean deezerTitleSetup = false;
+    Boolean spotifyTitleSetup = false;
+    Boolean spotifyDisplayReady = false;
+    int attemptNumber = 1000;
 
     int deezerPlaylistnumber = 0;
     int spotifyPlaylistnumber = 0;
@@ -72,7 +85,9 @@ public class SetupPlaylist extends BaseActivity
 
     DeezerConnect deezerConnect;
     ArrayList<Playlist> deezerPlaylistList = new ArrayList<>();
+    ArrayList<Playlist> deezerCorrectPlaylistList = new ArrayList<>();
     ArrayList<String> spotifyPlaylistList = new ArrayList<>();
+    ArrayList<String> spotifyPlaylistNameList = new ArrayList<>();
     ArrayList<String> idList = new ArrayList<>();
 
     @Override
@@ -86,6 +101,7 @@ public class SetupPlaylist extends BaseActivity
         spotifyChecked = intent.getBooleanExtra("spotify",false);
         folderChecked = intent.getBooleanExtra("folder",false);
 
+        loadingBar = findViewById(R.id.loadingBar);
         songSwitch = findViewById(R.id.songSwitch);
         playlistSwitch = findViewById(R.id.playlistSwitch);
         randomSongText = findViewById(R.id.randomSongText);
@@ -165,22 +181,39 @@ public class SetupPlaylist extends BaseActivity
 
     public void goToNext(View view)
     {
-        Intent intent = new Intent(this, SetupAlarm.class);
-        intent.putExtra("randomSong", !songSwitch.isChecked());
-        intent.putStringArrayListExtra("idList", idList);
-        startActivity(intent);
+        for (CheckBox checkbox : checkboxList)
+        {
+            if (checkbox.isChecked())
+            {
+                Intent intent = new Intent(this, SetupAlarm.class);
+                intent.putExtra("randomSong", !songSwitch.isChecked());
+                intent.putStringArrayListExtra("idList", idList);
+                startActivity(intent);
+
+                break;
+            }
+        }
     }
 
     public void connectionSetup(int origin)
     {
+        System.out.println(origin + " - " + deezerChecked + " - " + spotifyChecked + " - " + folderChecked);
+
         if (origin == INIT)
         {
             if (deezerChecked)
             {
+                if (spotifyChecked)
+                {
+                    new SpotifyCrawler().execute("me/tracks");
+                    new SpotifyCrawler().execute("me/playlists");
+                }
+
                 getDeezerPlaylists();
             }
             else if (spotifyChecked)
             {
+                new SpotifyCrawler().execute("me/tracks");
                 new SpotifyCrawler().execute("me/playlists");
             }
             else
@@ -193,6 +226,7 @@ public class SetupPlaylist extends BaseActivity
         {
             if (spotifyChecked)
             {
+                new SpotifyCrawler().execute("me/tracks");
                 new SpotifyCrawler().execute("me/playlists");
             }
             else if (folderChecked)
@@ -224,28 +258,7 @@ public class SetupPlaylist extends BaseActivity
                     deezerPlaylistList.add(playlistListTemp.remove(getLovedTracksID(playlistListTemp)));
                     deezerPlaylistList.addAll(playlistListTemp);
 
-                    addTitle("Deezer");
-
-                    for (Playlist playlist : deezerPlaylistList)
-                    {
-                        if (playlist.isLovedTracks())
-                        {
-                            addPlaylist(DEEZER,"Musiques préférées");
-                        }
-                        else
-                        {
-                            addPlaylist(DEEZER,playlist.getTitle());
-                        }
-                    }
-
-                    if (spotifyChecked)
-                    {
-                        new SpotifyCrawler().execute("me/playlists");
-                    }
-                    else if (folderChecked)
-                    {
-                        getFolderSongs();
-                    }
+                    displayDeezerPlaylists(0);
                 }
 
                 public void onUnparsedResult(String requestResponse, Object requestId)
@@ -271,6 +284,111 @@ public class SetupPlaylist extends BaseActivity
         }
     }
 
+    public void displayDeezerPlaylists(final int id)
+    {
+        RequestListener listener = new JsonRequestListener()
+        {
+            public void onResult(Object result, Object requestId)
+            {
+                List<Track> trackList = (List<Track>) result;
+
+                if (trackList.size() > 0)
+                {
+                    deezerCorrectPlaylistList.add(deezerPlaylistList.get(id));
+                }
+
+                if (id + 1 == deezerPlaylistList.size())
+                {
+                    if (spotifyChecked)
+                    {
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable()
+                        {
+                            public void run()
+                            {
+                                if (!spotifyDisplayReady && attemptNumber > 0)
+                                {
+                                    handler.postDelayed(this, 10);
+                                }
+                            }
+                        }, 0);
+                    }
+
+                    if (deezerCorrectPlaylistList.size() > 0)
+                    {
+                        loadingBar.setVisibility(View.GONE);
+                        addTitle("Deezer");
+                    }
+
+                    for (Playlist playlist : deezerCorrectPlaylistList)
+                    {
+                        if (playlist.isLovedTracks())
+                        {
+                            addPlaylist(DEEZER, "Musique préférées");
+                        }
+                        else
+                        {
+                            addPlaylist(DEEZER, playlist.getTitle());
+                        }
+                    }
+
+                    if (spotifyChecked)
+                    {
+                        displaySpotifyPlaylists();
+                    }
+                    else if (folderChecked)
+                    {
+                        getFolderSongs();
+                    }
+                }
+                else
+                {
+                    displayDeezerPlaylists(id + 1);
+                }
+            }
+
+            public void onUnparsedResult(String requestResponse, Object requestId) {}
+            public void onException(Exception e, Object requestId) {}
+        };
+
+        Bundle bundle = new Bundle(1);
+        bundle.putString("limit","1");
+        DeezerRequest request = new DeezerRequest("playlist/" + deezerPlaylistList.get(id).getId() + "/tracks", bundle);
+        deezerConnect.requestAsync(request, listener);
+    }
+
+    public void displaySpotifyPlaylists()
+    {
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable()
+        {
+            public void run()
+            {
+                if (!spotifyDisplayReady && attemptNumber > 0)
+                {
+                    handler.postDelayed(this, 10);
+                    attemptNumber--;
+                }
+            }
+        }, 0);
+
+        if (attemptNumber > 0)
+        {
+            loadingBar.setVisibility(View.GONE);
+            addTitle("Spotify");
+
+            for (String name : spotifyPlaylistNameList)
+            {
+                addPlaylist(SPOTIFY,name);
+            }
+        }
+
+        if (folderChecked)
+        {
+            getFolderSongs();
+        }
+    }
+
     public int getLovedTracksID(List<Playlist> list)
     {
         for (int i = 0 ; i < list.size() ; i++)
@@ -286,8 +404,18 @@ public class SetupPlaylist extends BaseActivity
 
     public void getFolderSongs()
     {
-        addTitle("Dossier Musique");
-        addPlaylist(FOLDER,"Liste des musiques");
+        app = (WeckerParameters) getApplicationContext();
+        File rootDir = new File(app.getMusicFolderPath());
+        String[] SUFFIX = {"mp3","wma","3gp","mp4","m4a","aac","flac","gsm","mkv","wav","ogg","ts"};
+        Collection<File> musicList = FileUtils.listFiles(rootDir, SUFFIX, true);
+
+        loadingBar.setVisibility(View.GONE);
+
+        if (musicList.size() > 0)
+        {
+            addTitle("Dossier Musique");
+            addPlaylist(FOLDER,"Liste des musiques");
+        }
     }
 
     public void addTitle(String title)
@@ -296,14 +424,14 @@ public class SetupPlaylist extends BaseActivity
         TextView teamName = new TextView(this);
 
         teamName.setText(title);
-        teamName.setTextSize(TypedValue.COMPLEX_UNIT_PX, 70);
+        teamName.setTextSize(TypedValue.COMPLEX_UNIT_PX, 60);
         teamName.setTypeface(ResourcesCompat.getFont(this,R.font.carter_one));
         teamName.setLines(1);
 
         if ("Deezer".equals(title))
         {
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-            anim.setDuration(250);
+            anim.setDuration(750);
             teamName.startAnimation(anim);
             teamName.setTextColor(getResources().getColor(R.color.deezerColor));
         }
@@ -312,16 +440,16 @@ public class SetupPlaylist extends BaseActivity
             spotifyPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-            anim.setDuration(250);
-            anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber));
+            anim.setDuration(750);
+            anim.setStartOffset(50*(deezerPlaylistnumber + spotifyPlaylistnumber));
             teamName.startAnimation(anim);
             teamName.setTextColor(getResources().getColor(R.color.spotifyColor));
         }
         else
         {
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-            anim.setDuration(250);
-            anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber + 1));
+            anim.setDuration(750);
+            anim.setStartOffset(50*(deezerPlaylistnumber + spotifyPlaylistnumber + 1));
             teamName.startAnimation(anim);
             teamName.setTextColor(getResources().getColor(R.color.folderColor));
         }
@@ -334,14 +462,14 @@ public class SetupPlaylist extends BaseActivity
     {
         LinearLayout newPlaylist = new LinearLayout(this);
         LinearLayout.LayoutParams playlistParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        playlistParams.setMargins(0, 0, 0, 10);
+        playlistParams.setMargins(0, 0, 0, 5);
 
         newPlaylist.setOrientation(LinearLayout.HORIZONTAL);
         newPlaylist.setLayoutParams(playlistParams);
         newPlaylist.setGravity(Gravity.CENTER);
 
         // Create a CheckBox
-        CheckBox checkBox = new CheckBox(this);
+        final CheckBox checkBox = new CheckBox(this);
         checkBox.setScaleX(1.5f);
         checkBox.setScaleY(1.5f);
         checkBox.setOnClickListener(new View.OnClickListener()
@@ -365,11 +493,11 @@ public class SetupPlaylist extends BaseActivity
                 {
                     if (((CheckBox) v).isChecked())
                     {
-                        idList.add(Long.toString(deezerPlaylistList.get(v.getId()).getId()));
+                        idList.add(Long.toString(deezerCorrectPlaylistList.get(v.getId()).getId()));
                     }
                     else
                     {
-                        idList.remove(Long.toString(deezerPlaylistList.get(v.getId()).getId()));
+                        idList.remove(Long.toString(deezerCorrectPlaylistList.get(v.getId()).getId()));
                     }
 
                 }
@@ -395,6 +523,8 @@ public class SetupPlaylist extends BaseActivity
                         idList.remove("folderMusic");
                     }
                 }
+
+                System.out.println(idList);
             }
         });
 
@@ -410,56 +540,128 @@ public class SetupPlaylist extends BaseActivity
         checkboxLayout.addView(checkBox);
 
         // Create a new Button
-        TextView newButton = new TextView(this);
+        Button newButton = new Button(this);
         newButton.setText(playlistName);
         newButton.setGravity(Gravity.CENTER_VERTICAL);
-        newButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, 50);
+        newButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, 40);
         newButton.setTypeface(ResourcesCompat.getFont(this,R.font.carter_one));
         newButton.setLines(1);
+        newButton.setAllCaps(false);
         newButton.setHorizontallyScrolling(true);
         newButton.setMarqueeRepeatLimit(-1);
         newButton.setFocusable(true);
-        newButton.setFocusableInTouchMode(true);
         newButton.setEllipsize(TextUtils.TruncateAt.MARQUEE);
-
+        newButton.setTextColor(getResources().getColor(R.color.white));
         newButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        newButton.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                int buttonId = buttonList.indexOf((Button) v);
+                CheckBox checkbox = checkboxList.get(buttonId);
+
+                if (checkbox.isChecked())
+                {
+                    checkbox.setChecked(false);
+                }
+                else
+                {
+                    checkbox.setChecked(true);
+                }
+
+                checkboxList.set(buttonId, checkbox);
+
+                if (playlistSwitch.isChecked() && checkbox.isChecked())
+                {
+                    for (int i = 0 ; i < checkboxList.size() ; i++)
+                    {
+                        if (i != buttonId)
+                        {
+                            checkboxList.get(i).setChecked(false);
+                        }
+                    }
+
+                    idList.clear();
+                }
+
+                if (origin == DEEZER)
+                {
+                    if (checkbox.isChecked())
+                    {
+                        idList.add(Long.toString(deezerCorrectPlaylistList.get(checkbox.getId()).getId()));
+                    }
+                    else
+                    {
+                        idList.remove(Long.toString(deezerCorrectPlaylistList.get(checkbox.getId()).getId()));
+                    }
+
+                }
+                else if (origin == SPOTIFY)
+                {
+                    if (checkbox.isChecked())
+                    {
+                        idList.add(spotifyPlaylistList.get(checkbox.getId()));
+                    }
+                    else
+                    {
+                        idList.remove(spotifyPlaylistList.get(checkbox.getId()));
+                    }
+                }
+                else if (origin == FOLDER)
+                {
+                    if (checkbox.isChecked())
+                    {
+                        idList.add("folderMusic");
+                    }
+                    else
+                    {
+                        idList.remove("folderMusic");
+                    }
+                }
+
+                System.out.println(idList);
+            }
+        });
 
         if (origin == DEEZER)
         {
-            newButton.setTextColor(getResources().getColor(R.color.deezerColor));
+            newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
             checkBox.setId(deezerPlaylistnumber);
             deezerPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-            anim.setDuration(250);
-            anim.setStartOffset(250*deezerPlaylistnumber);
+            anim.setDuration(750);
+            anim.setStartOffset(50*deezerPlaylistnumber);
             newPlaylist.startAnimation(anim);
         }
         else if (origin == SPOTIFY)
         {
-            newButton.setTextColor(getResources().getColor(R.color.spotifyColor));
+            newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
             checkBox.setId(spotifyPlaylistnumber - 1);
             spotifyPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-            anim.setDuration(250);
-            anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber));
+            anim.setDuration(750);
+            anim.setStartOffset(50*(deezerPlaylistnumber + spotifyPlaylistnumber));
             newPlaylist.startAnimation(anim);
         }
         else if (origin == FOLDER)
         {
-            newButton.setTextColor(getResources().getColor(R.color.folderColor));
+            newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.folderColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.folderColor)));
             checkBox.setId(folderPlaylistnumber - 1);
             folderPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-            anim.setDuration(250);
-            anim.setStartOffset(250*(deezerPlaylistnumber + spotifyPlaylistnumber + 2));
+            anim.setDuration(750);
+            anim.setStartOffset(50*(deezerPlaylistnumber + spotifyPlaylistnumber + 2));
             newPlaylist.startAnimation(anim);
         }
+
+        buttonList.add(newButton);
 
         newPlaylist.addView(checkboxLayout);
         newPlaylist.addView(newButton);
@@ -481,7 +683,17 @@ public class SetupPlaylist extends BaseActivity
                 app = (WeckerParameters) getApplicationContext();
                 endpoint = strings[0];
 
-                URL url = new URL("https://api.spotify.com/v1/" + endpoint);
+                URL url;
+
+                if ("me/tracks".equals(endpoint))
+                {
+                    url = new URL("https://api.spotify.com/v1/me/tracks?limit=1");
+                }
+                else
+                {
+                    url = new URL("https://api.spotify.com/v1/" + endpoint);
+                }
+
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestProperty("Authorization", "Bearer " + app.getSpotifyToken());
 
@@ -509,6 +721,8 @@ public class SetupPlaylist extends BaseActivity
         {
             super.onPostExecute(s);
 
+            System.out.println(server_response);
+
             if (server_response.length() == 0)
             {
                 connectionSetup(SPOTIFY);
@@ -523,20 +737,39 @@ public class SetupPlaylist extends BaseActivity
 
                         if (playlistJSONList != null)
                         {
-                            addTitle("Spotify");
-                            addPlaylist(SPOTIFY,"Musique préférées");
-                            spotifyPlaylistList.add("spotifyLovedSongs");
-
                             for (int i = 0 ; i < playlistJSONList.length() ; i++)
                             {
-                                spotifyPlaylistList.add(playlistJSONList.optJSONObject(i).getString("id"));
-                                addPlaylist(SPOTIFY, playlistJSONList.optJSONObject(i).getString("name"));
+                                JSONObject tracks = (JSONObject) playlistJSONList.optJSONObject(i).get("tracks");
+
+                                if (!"0".equals(tracks.getString("total")))
+                                {
+                                    spotifyPlaylistList.add(playlistJSONList.optJSONObject(i).getString("id"));
+                                    spotifyPlaylistNameList.add(playlistJSONList.optJSONObject(i).getString("name"));
+                                }
                             }
 
-                            if (folderChecked)
+                            spotifyDisplayReady = true;
+
+                            if (!deezerChecked)
                             {
-                                getFolderSongs();
+                                displaySpotifyPlaylists();
                             }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        connectionSetup(SPOTIFY);
+                        System.out.println(e.getMessage());
+                    }
+                }
+                else if ("me/tracks".equals(endpoint))
+                {
+                    try
+                    {
+                        if (!"0".equals(server_response.getString("total")))
+                        {
+                            spotifyPlaylistNameList.add("Musique préférées");
+                            spotifyPlaylistList.add("spotifyLovedSongs");
                         }
                     }
                     catch (Exception e)
