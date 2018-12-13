@@ -5,9 +5,12 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.deezer.sdk.model.Track;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+
+import java.io.File;
 
 public class WeckerParameters  extends Application
 {
@@ -15,6 +18,12 @@ public class WeckerParameters  extends Application
     SpotifyAppRemote spotifyConnect;
 
     String musicFolderPath = "";
+
+    File selectedFolderMusic;
+    String selectedDeezerMusic;
+    String selectedSpotifyMusic;
+
+    File emergencyTrack;
 
     @Override
     public void onCreate()
@@ -24,6 +33,10 @@ public class WeckerParameters  extends Application
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         spotifyToken = sharedPrefs.getString("spotifyToken","");
         musicFolderPath = sharedPrefs.getString("musicFolderPath","");
+        emergencyTrack = new File(sharedPrefs.getString("emergencyTrack",""));
+        selectedFolderMusic = new File(sharedPrefs.getString("selectedFolderMusic",""));
+        selectedDeezerMusic = sharedPrefs.getString("selectedDeezerMusic","");
+        selectedSpotifyMusic = sharedPrefs.getString("selectedSpotifyMusic","");
 
         if (spotifyToken.length() > 0)
         {
@@ -51,6 +64,65 @@ public class WeckerParameters  extends Application
         }
     }
 
+    public File getSelectedFolderMusic()
+    {
+        return selectedFolderMusic;
+    }
+
+    public void setSelectedFolderMusic(File selectedFolderMusic)
+    {
+        this.selectedFolderMusic = selectedFolderMusic;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("selectedFolderMusic",selectedFolderMusic.getAbsolutePath());
+        editor.apply();
+    }
+
+    public String getSelectedDeezerMusic()
+    {
+        return selectedDeezerMusic;
+    }
+
+    public void setSelectedDeezerMusic(String selectedDeezerMusic)
+    {
+        this.selectedDeezerMusic = selectedDeezerMusic;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("selectedDeezerMusic",selectedDeezerMusic);
+        editor.apply();
+    }
+
+    public String getSelectedSpotifyMusic()
+    {
+        return selectedSpotifyMusic;
+    }
+
+    public void setSelectedSpotifyMusic(String selectedSpotifyMusic)
+    {
+        this.selectedSpotifyMusic = selectedSpotifyMusic;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("selectedSpotifyMusic",selectedSpotifyMusic);
+        editor.apply();
+    }
+
+    public File getEmergencyTrack()
+    {
+        return emergencyTrack;
+    }
+
+    public void setEmergencyTrack(File emergencyTrack)
+    {
+        this.emergencyTrack = emergencyTrack;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("emergencyTrack",emergencyTrack.getAbsolutePath());
+        editor.apply();
+    }
 
     public SpotifyAppRemote getSpotifyConnect()
     {

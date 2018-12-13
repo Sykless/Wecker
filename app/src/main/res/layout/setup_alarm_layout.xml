@@ -7,4 +7,112 @@
     android:background="@color/ic_launcher_background"
     tools:context=".SetupAlarm">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/lundi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="L"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+        <Button
+            android:id="@+id/mardi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="M"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+        <Button
+            android:id="@+id/mercredi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="M"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+        <Button
+            android:id="@+id/jeudi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="J"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+        <Button
+            android:id="@+id/vendredi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="V"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+        <Button
+            android:id="@+id/samedi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="S"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+        <Button
+            android:id="@+id/dimanche"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/white"
+            android:text="D"
+            android:textColor="@color/ic_launcher_background"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="25dp"
+        android:backgroundTint="#FFFFFF"
+        android:gravity="center"
+        android:padding="15dp"
+        android:text="Valider"
+        android:textAllCaps="false"
+        android:textColor="@color/ic_launcher_background"
+        android:textSize="40sp"
+        app:fontFamily="@font/carter_one"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </android.support.constraint.ConstraintLayout>
