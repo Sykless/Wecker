@@ -125,7 +125,7 @@ public class MusicOrigin extends BaseActivity
         {
             app = (WeckerParameters) getApplicationContext();
 
-            deezerConnect = new DeezerConnect(this, "315304");
+            deezerConnect = DeezerConnect.forApp("315304").build();
             deezerConnected = new SessionStore().restore(deezerConnect, this);
 
             new SpotifyCrawler().execute("me");
@@ -254,7 +254,7 @@ public class MusicOrigin extends BaseActivity
 
     public void deezerConnection()
     {
-        deezerConnect = new DeezerConnect(this, "315304");
+        deezerConnect = DeezerConnect.forApp("315304").build();
 
         String[] permissions = new String[]{
                 Permissions.BASIC_ACCESS,

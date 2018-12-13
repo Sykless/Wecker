@@ -30,7 +30,7 @@ public class Deezer extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.deezer_layout);
 
-        deezerConnect = new DeezerConnect(this, "315304");
+        deezerConnect = DeezerConnect.forApp("315304").build();
 
         // restore any saved session
         SessionStore sessionStore = new SessionStore();
@@ -79,6 +79,7 @@ public class Deezer extends BaseActivity
             public void onResult(Object result, Object requestId)
             {
                 List<Track> trackList = (List<Track>) result;
+                System.out.println(trackList.size());
             }
 
             public void onUnparsedResult(String requestResponse, Object requestId) {}

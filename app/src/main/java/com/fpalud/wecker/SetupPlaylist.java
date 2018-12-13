@@ -165,7 +165,8 @@ public class SetupPlaylist extends BaseActivity
 
     public void goToNext(View view)
     {
-        Intent intent = new Intent(this, Home.class);
+        Intent intent = new Intent(this, SetupAlarm.class);
+        intent.putExtra("randomSong", !songSwitch.isChecked());
         intent.putStringArrayListExtra("idList", idList);
         startActivity(intent);
     }
@@ -211,7 +212,7 @@ public class SetupPlaylist extends BaseActivity
 
     public void getDeezerPlaylists()
     {
-        deezerConnect = new DeezerConnect(this, "315304");
+        deezerConnect = DeezerConnect.forApp("315304").build();
 
         if (new SessionStore().restore(deezerConnect, this))
         {

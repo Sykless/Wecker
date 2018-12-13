@@ -35,7 +35,7 @@ public class Spotify extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.spotify_layout);
 
-        new SpotifyCrawler().execute("me/playlists");
+        new SpotifyCrawler().execute("playlists/5fMCrRnSy4TauAmM36zrIP");
     }
 
     public class SpotifyCrawler extends AsyncTask<String, Void, String>
@@ -54,6 +54,7 @@ public class Spotify extends BaseActivity
                 URL url = new URL("https://api.spotify.com/v1/" + endpoint);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestProperty("Authorization", "Bearer " + app.getSpotifyToken());
+                urlConnection.setRequestProperty("limit","100");
 
                 if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
                 {
@@ -99,6 +100,7 @@ public class Spotify extends BaseActivity
                             for (int i = 0 ; i < playlistJSONList.length() ; i++)
                             {
                                 playlistListSpotify.add(playlistJSONList.optJSONObject(i));
+                                System.out.println(playlistJSONList.optJSONObject(i));
                             }
 
                             new SpotifyCrawler().execute("playlists/" + playlistListSpotify.get(0).get("id") + "/tracks");
@@ -113,13 +115,59 @@ public class Spotify extends BaseActivity
                 {
                     try
                     {
+                        JSONObject tracks = (JSONObject) server_response.get("tracks");
+
+                        if (tracks != null)
+                        {
+                            System.out.println(tracks.getString("total"));
+                            System.out.println(tracks.getString("offset"));
+                            System.out.println(tracks.getString("limit"));
+                            System.out.println(tracks.getString("next"));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        System.out.println(e.getMessage());
+                    }
+
+                    /*try
+                    {
+                        JSONObject tracks = (JSONObject) server_response.get("tracks");
+
+                        if (tracks != null)
+                        {
+                            trackNumber.add(Integer.valueOf(tracks.getString("total")));
+                            newTrackList(true);
+
+                            System.out.println(tracks.getString("total"));
+                            System.out.println(tracks.getString("offset"));
+                            System.out.println(tracks.getString("limit"));
+                            System.out.println(tracks.getString("next"));
+                        }
+                        else
+                        {
+                            newTrackList(false);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        System.out.println(e.getMessage());
+                        newTrackList(false);
+                    }*/
+
+                    /*
+                    try
+                    {
                         JSONArray trackJSONList = (JSONArray) server_response.get("items");
 
                         if (trackJSONList != null)
                         {
+                            System.out.println(trackJSONList.length());
+
                             for (int i = 0 ; i < trackJSONList.length() ; i++)
                             {
                                 trackListSpotify.add(trackJSONList.optJSONObject(i));
+                                System.out.println(trackJSONList.optJSONObject(i));
                             }
 
                             app = (WeckerParameters) getApplicationContext();
@@ -130,6 +178,7 @@ public class Spotify extends BaseActivity
                     {
                         System.out.println(e.getMessage());
                     }
+                    */
                 }
             }
         }
