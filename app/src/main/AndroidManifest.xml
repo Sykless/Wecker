@@ -46,7 +46,8 @@
             android:resource="@array/preloaded_fonts" />
 
         <activity android:name=".SetupPlaylist" />
-        <activity android:name=".SetupAlarm"/>
+        <activity android:name=".SetupAlarm"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"/>
     </application>
 
 </manifest>

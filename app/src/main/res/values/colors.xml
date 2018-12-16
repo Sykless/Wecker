@@ -2,10 +2,10 @@
 <resources>
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#1a6c91</color>
-    <color name="colorAccent">#D81B60</color>
-    <color name="blue">#27A0D2</color>
+    <color name="colorAccent">#d81b60</color>
+    <color name="blue">#27a0d2</color>
     <color name="darkBlue">#1A6C91</color>
-    <color name="white">#FFFFFF</color>
+    <color name="white">#ffffff</color>
     <color name="deezerColor">#231F20</color>
     <color name="spotifyColor">#1ED760</color>
     <color name="folderColor">#F9D873</color>

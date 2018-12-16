@@ -6,11 +6,14 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.deezer.sdk.model.Track;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class WeckerParameters  extends Application
@@ -25,6 +28,7 @@ public class WeckerParameters  extends Application
     String selectedSpotifyMusic;
 
     File emergencyTrack;
+    ArrayList<Alarm> alarmList = new ArrayList<>();
 
     @Override
     public void onCreate()
@@ -38,6 +42,7 @@ public class WeckerParameters  extends Application
         selectedFolderMusic = new File(sharedPrefs.getString("selectedFolderMusic",""));
         selectedDeezerMusic = sharedPrefs.getString("selectedDeezerMusic","");
         selectedSpotifyMusic = sharedPrefs.getString("selectedSpotifyMusic","");
+        alarmList = new Gson().fromJson(sharedPrefs.getString("alarmList", null), new TypeToken<ArrayList<Alarm>>() {}.getType());
 
         if (spotifyToken.length() > 0)
         {
@@ -162,6 +167,31 @@ public class WeckerParameters  extends Application
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putString("spotifyToken",spotifyToken);
+        editor.apply();
+    }
+
+    public ArrayList<Alarm> getAlarmList()
+    {
+        return alarmList;
+    }
+
+    public void setAlarmList(ArrayList<Alarm> alarmList)
+    {
+        this.alarmList = alarmList;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("alarmList", new Gson().toJson(alarmList));
+        editor.apply();
+    }
+
+    public void addAlarm(Alarm alarm)
+    {
+        alarmList.add(alarm);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("alarmList", new Gson().toJson(alarmList));
         editor.apply();
     }
 }

@@ -1,51 +1,97 @@
 package com.fpalud.wecker;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
+import android.view.animation.Animation;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-import java.util.Calendar;
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Home extends BaseActivity
 {
+    ImageView alarmImage;
+    AnimationDrawable checkAnimation;
+    AnimationDrawable uncheckAnimation;
+
+    TextView time;
+    ArrayList<TextView> dayList = new ArrayList<>();
+    ArrayList<Boolean> dayChecked = new ArrayList<>(Arrays.asList(false, false, false, false, false, true, true));
+
+    boolean imageChecked = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_layout);
 
-        Intent intent = getIntent();
-        System.out.println(intent.getStringArrayListExtra("idList"));
+        alarmImage = findViewById(R.id.alarmImage);
+        time = findViewById(R.id.time);
+        dayList.add((TextView) findViewById(R.id.lundi));
+        dayList.add((TextView) findViewById(R.id.mardi));
+        dayList.add((TextView) findViewById(R.id.mercredi));
+        dayList.add((TextView) findViewById(R.id.jeudi));
+        dayList.add((TextView) findViewById(R.id.vendredi));
+        dayList.add((TextView) findViewById(R.id.samedi));
+        dayList.add((TextView) findViewById(R.id.dimanche));
+
+        for (int i = 0 ; i < 7 ; i++)
+        {
+            if (dayChecked.get(i))
+            {
+                dayList.get(i).setTextColor(getResources().getColor(R.color.darkBlue));
+            }
+        }
+
+        checkAnimation = (AnimationDrawable) getResources().getDrawable(R.drawable.alarm_check_animation);
+        uncheckAnimation = (AnimationDrawable) getResources().getDrawable(R.drawable.alarm_uncheck_animation);
+        alarmImage.setBackground(checkAnimation);
+    }
+
+    public void clickImage(View view)
+    {
+        if (imageChecked)
+        {
+            imageChecked = false;
+
+            time.setTextColor(getResources().getColor(R.color.white));
+            for (int i = 0 ; i < 7 ; i++)
+            {
+                if (!dayChecked.get(i))
+                {
+                    dayList.get(i).setTextColor(getResources().getColor(R.color.white));
+                }
+            }
+
+            alarmImage.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
+            alarmImage.setBackground(uncheckAnimation);
+            uncheckAnimation.start();
+        }
+        else
+        {
+            imageChecked = true;
+
+            time.setTextColor(getResources().getColor(R.color.darkBlue));
+            for (TextView day : dayList)
+            {
+                day.setTextColor(getResources().getColor(R.color.darkBlue));
+            }
+            alarmImage.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
+            alarmImage.setBackground(checkAnimation);
+            checkAnimation.start();
+        }
     }
 
     public void goToCreate(View view)
     {
-        Intent intent = new Intent(this, MusicOrigin.class);
-        startActivity(intent);
-    }
-
-    public void setAlarm()
-    {
-        AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
-        Calendar futureDate = Calendar.getInstance();
-        futureDate.set(Calendar.MINUTE,futureDate.get(Calendar.MINUTE) + 1);
-
-        Intent intent = new Intent(this, LaunchAlarm.class);
-        PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        if (android.os.Build.VERSION.SDK_INT >= 19)
-        {
-            System.out.println("Launch api >= 19");
-            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
-        }
-        else {
-            System.out.println("Launch api < 19");
-            am.set(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
-        }
+        // ad.start();
     }
 
     @Override
