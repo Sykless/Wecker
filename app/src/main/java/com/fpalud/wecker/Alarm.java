@@ -10,6 +10,7 @@ public class Alarm
     ArrayList<String> idSongsList = new ArrayList<>();
     boolean vibration;
     boolean emergencyAlarm;
+    boolean active;
     int id;
 
     Alarm(int hours, int minutes, ArrayList<Boolean> days, ArrayList<String> idSongsList, boolean vibration, boolean emergencyAlarm)
@@ -20,6 +21,7 @@ public class Alarm
         setIdSongsList(idSongsList);
         setVibration(vibration);
         setEmergencyAlarm(emergencyAlarm);
+        active = true;
         id = (int) System.currentTimeMillis();
 
         /*AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
@@ -45,7 +47,6 @@ public class Alarm
     {
         return hours;
     }
-
     public void setHours(int hours)
     {
         this.hours = hours;
@@ -55,7 +56,6 @@ public class Alarm
     {
         return minutes;
     }
-
     public void setMinutes(int minutes)
     {
         this.minutes = minutes;
@@ -65,7 +65,6 @@ public class Alarm
     {
         return days;
     }
-
     public void setDays(ArrayList<Boolean> days)
     {
         this.days = days;
@@ -75,7 +74,6 @@ public class Alarm
     {
         return idSongsList;
     }
-
     public void setIdSongsList(ArrayList<String> idSongsList)
     {
         this.idSongsList = idSongsList;
@@ -85,17 +83,24 @@ public class Alarm
     {
         return vibration;
     }
-
     public void setVibration(boolean vibration)
     {
         this.vibration = vibration;
+    }
+
+    public boolean isActive()
+    {
+        return active;
+    }
+    public void setActive(boolean active)
+    {
+        this.active = active;
     }
 
     public boolean isEmergencyAlarm()
     {
         return emergencyAlarm;
     }
-
     public void setEmergencyAlarm(boolean emergencyAlarm)
     {
         this.emergencyAlarm = emergencyAlarm;

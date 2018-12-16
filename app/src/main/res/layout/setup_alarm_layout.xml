@@ -323,6 +323,7 @@
         android:gravity="center"
         android:padding="15dp"
         android:text="Valider"
+        android:onClick="goToNext"
         android:textAllCaps="false"
         android:textColor="@color/ic_launcher_background"
         android:textSize="40sp"
