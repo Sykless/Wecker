@@ -121,14 +121,14 @@ public class SetupAlarm extends BaseActivity
                 if (buttonClicked.get(id))
                 {
                     buttonClicked.set(id, false);
-                    v.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
-                    ((Button) v).setTextColor(getResources().getColor(R.color.blue));
+                    v.setBackgroundTintList(ColorStateList.valueOf(0xFFBBBBBB));
+                    ((Button) v).setTextColor(0x88FFFFFF);
                 }
                 else
                 {
                     buttonClicked.set(id, true);
-                    v.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
-                    ((Button) v).setTextColor(getResources().getColor(R.color.white));
+                    v.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.white)));
+                    ((Button) v).setTextColor(getResources().getColor(R.color.blue));
                 }
             }
         };
@@ -355,8 +355,8 @@ public class SetupAlarm extends BaseActivity
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        builder.setMessage("Alarme d'urgence\n\nMême après validation de la sonnerie, déclenche des vibrations continues 5 minutes après l'alarme normale " +
-                "pour garantir le réveil.")
+        builder.setMessage("Alarme d'urgence\n\n"+
+                "Déclenche des vibrations continues 5 minutes après validation de l'alarme normale pour garantir le réveil.")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener()
                 {
                     public void onClick(DialogInterface dialog, int id) {}

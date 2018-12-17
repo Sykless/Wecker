@@ -145,9 +145,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="L"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
 
@@ -156,9 +156,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="M"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
 
@@ -167,9 +167,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="M"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
 
@@ -178,9 +178,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="J"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
 
@@ -189,9 +189,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="V"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
 
@@ -200,9 +200,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="S"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
 
@@ -211,9 +211,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="#BBBBBB"
             android:text="D"
-            android:textColor="@color/ic_launcher_background"
+            android:textColor="#88FFFFFF"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
     </LinearLayout>
@@ -299,10 +299,11 @@
             app:fontFamily="@font/carter_one" />
 
         <Button
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
+            android:background="@drawable/round_button"
             android:backgroundTint="@color/white"
             android:gravity="center"
             android:onClick="displayEmergencyInstructions"

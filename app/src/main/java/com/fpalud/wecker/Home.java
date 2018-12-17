@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
@@ -33,11 +34,6 @@ public class Home extends BaseActivity
 {
     ArrayList<AnimationDrawable> checkAnimations = new ArrayList<>();
     ArrayList<AnimationDrawable> uncheckAnimations = new ArrayList<>();
-
-    AnimationDrawable checkAnimation;
-    AnimationDrawable uncheckAnimation;
-    AlphaAnimation buttonClick = new AlphaAnimation(1F, 0.7F); // Fading animation on text when clicked
-    AlphaAnimation buttonClickRelease = new AlphaAnimation(0.7F,1F); // Unfading animation on text when clicked
 
     WeckerParameters app;
     LinearLayout mainLayout;
@@ -56,29 +52,54 @@ public class Home extends BaseActivity
 
         mainLayout = findViewById(R.id.mainLayout);
 
-        buttonClick.setDuration(100);
-        buttonClickRelease.setDuration(100);
-        buttonClickRelease.setStartOffset(100);
-        checkAnimation = (AnimationDrawable) getResources().getDrawable(R.drawable.alarm_check_animation);
-        uncheckAnimation = (AnimationDrawable) getResources().getDrawable(R.drawable.alarm_uncheck_animation);
-
-        System.out.println(alarmList.size());
         setupAlarmLayout();
     }
 
     public void setupAlarmLayout()
     {
+        mainLayout.removeAllViews();
+
         for (int alarmIndex = 0 ; alarmIndex < alarmList.size() ; alarmIndex++)
         {
             Alarm alarm = alarmList.get(alarmIndex);
 
+            LinearLayout parentLayout = new LinearLayout(this);
+
+            LinearLayout.LayoutParams parentsParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            parentsParams.setMargins(0, alarmIndex == 0 ? 0 : 16, 0, 0);
+            parentLayout.setLayoutParams(parentsParams);
+            parentLayout.setGravity(Gravity.CENTER);
+            parentLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+            ImageView trashImage = new ImageView(this);
+            trashImage.setId(alarmIndex);
+            trashImage.setClickable(true);
+            trashImage.setFocusable(true);
+            trashImage.setVisibility(View.GONE);
+            trashImage.setImageResource(R.drawable.ic_delete_white_48dp);
+            trashImage.setOnClickListener(new View.OnClickListener()
+            {
+                public void onClick(View view)
+                {
+                    int alarmId = view.getId();
+                    app = (WeckerParameters) getApplicationContext();
+
+                    ArrayList<Alarm> alarmList = app.getAlarmList();
+                    alarmList.remove(alarmId);
+                    app.setAlarmList(alarmList);
+
+                    setupAlarmLayout();
+                }
+            });
+
+            TypedValue outValue = new TypedValue();
+            getApplicationContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+            trashImage.setBackgroundResource(outValue.resourceId);
+
             RelativeLayout newAlarm = new RelativeLayout(this);
             newAlarm.setId(alarmIndex);
 
-            LinearLayout.LayoutParams playlistParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            playlistParams.setMargins(0, 16, 0, 0);
-
-            newAlarm.setLayoutParams(playlistParams);
+            newAlarm.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             newAlarm.setBackground(getResources().getDrawable(R.drawable.border));
             newAlarm.setClickable(true);
             newAlarm.setFocusable(true);
@@ -102,6 +123,7 @@ public class Home extends BaseActivity
 
             LinearLayout daysLayout = new LinearLayout(this);
             daysLayout.setId(View.generateViewId());
+            daysLayout.setPadding(100,0,0,0);
             daysLayout.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
             daysLayout.setGravity(Gravity.CENTER);
             daysLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -122,7 +144,7 @@ public class Home extends BaseActivity
                 }
                 else
                 {
-                    day.setTextColor(getResources().getColor(R.color.darkBlue));
+                    day.setTextColor(getResources().getColor(R.color.grey));
                 }
 
                 daysLayout.addView(day,i);
@@ -137,8 +159,8 @@ public class Home extends BaseActivity
                 public void onClick(View v)
                 {
                     int alarmId = v.getId();
-                    System.out.println(alarmId);
                     Alarm alarm = alarmList.get(alarmId);
+                    app = (WeckerParameters) getApplicationContext();
 
                     ImageView alarmImage = (ImageView) v;
                     RelativeLayout mainLayout = (RelativeLayout) alarmImage.getParent();
@@ -147,15 +169,15 @@ public class Home extends BaseActivity
 
                     if (alarm.isActive())
                     {
-                        time.setTextColor(getResources().getColor(R.color.darkBlue));
+                        time.setTextColor(getResources().getColor(R.color.grey));
 
                         for (int i = 0 ; i < 7 ; i++)
                         {
                             TextView day = (TextView) daysLayout.getChildAt(i);
-                            day.setTextColor(getResources().getColor(R.color.darkBlue));
+                            day.setTextColor(getResources().getColor(R.color.grey));
                         }
 
-                        alarmImage.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
+                        alarmImage.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.grey)));
                         alarmImage.setBackground(checkAnimations.get(alarmId));
                         checkAnimations.get(alarmId).start();
 
@@ -175,7 +197,7 @@ public class Home extends BaseActivity
                             }
                             else
                             {
-                                day.setTextColor(getResources().getColor(R.color.darkBlue));
+                                day.setTextColor(getResources().getColor(R.color.grey));
                             }
                         }
 
@@ -185,6 +207,9 @@ public class Home extends BaseActivity
 
                         alarm.setActive(true);
                     }
+
+                    alarmList.set(alarmId, alarm);
+                    app.setAlarmList(alarmList);
                 }
             });
 
@@ -196,10 +221,18 @@ public class Home extends BaseActivity
             }
             else
             {
-                time.setTextColor(getResources().getColor(R.color.darkBlue));
-                alarmImage.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.darkBlue)));
+                time.setTextColor(getResources().getColor(R.color.grey));
+                alarmImage.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.grey)));
                 alarmImage.setBackground(uncheckAnimations.get(alarmIndex));
             }
+
+            LinearLayout.LayoutParams trashParams = new LinearLayout.LayoutParams(80, 80);
+            trashParams.setMargins(0,0,8,0);
+
+            RelativeLayout.LayoutParams imageParams = new RelativeLayout.LayoutParams(80, 80);
+            imageParams.addRule(RelativeLayout.ALIGN_PARENT_END);
+            imageParams.addRule(RelativeLayout.CENTER_VERTICAL);
+            imageParams.setMargins(0,8,8,8);
 
             RelativeLayout.LayoutParams timeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             timeParams.addRule(RelativeLayout.ALIGN_PARENT_START);
@@ -208,17 +241,12 @@ public class Home extends BaseActivity
 
             RelativeLayout.LayoutParams daysParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             daysParams.addRule(RelativeLayout.CENTER_VERTICAL);
-            daysParams.addRule(RelativeLayout.END_OF,time.getId());
-            daysParams.setMargins(24,0,0,0);
+            daysParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
-            RelativeLayout.LayoutParams imageParams = new RelativeLayout.LayoutParams(80, 80);
-            imageParams.addRule(RelativeLayout.ALIGN_PARENT_END);
-            imageParams.addRule(RelativeLayout.CENTER_VERTICAL);
-            imageParams.setMargins(0,8,8,8);
-
+            trashImage.setLayoutParams(trashParams);
             time.setLayoutParams(timeParams);
-            daysLayout.setLayoutParams(daysParams);
             alarmImage.setLayoutParams(imageParams);
+            daysLayout.setLayoutParams(daysParams);
 
             newAlarm.addView(time,0);
             newAlarm.addView(daysLayout,1);
@@ -227,12 +255,33 @@ public class Home extends BaseActivity
             {
                 public void onClick(View v)
                 {
-                    v.startAnimation(buttonClick);
-                    v.startAnimation(buttonClickRelease);
+                    // Change playlist
+                }
+            });
+            newAlarm.setOnLongClickListener(new View.OnLongClickListener()
+            {
+                public boolean onLongClick(View view)
+                {
+                    LinearLayout parentLayout = (LinearLayout) view.getParent();
+                    ImageView trashImage = (ImageView) parentLayout.getChildAt(0);
+
+                    if (trashImage.getVisibility() == View.GONE)
+                    {
+                        trashImage.setVisibility(View.VISIBLE);
+                    }
+                    else
+                    {
+                        trashImage.setVisibility(View.GONE);
+                    }
+
+                    return true;
                 }
             });
 
-            mainLayout.addView(newAlarm);
+            parentLayout.addView(trashImage,0);
+            parentLayout.addView(newAlarm,1);
+
+            mainLayout.addView(parentLayout);
         }
     }
 
@@ -240,6 +289,12 @@ public class Home extends BaseActivity
     {
         Intent intent = new Intent(this, MusicOrigin.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        moveTaskToBack(true);
     }
 
     @Override
