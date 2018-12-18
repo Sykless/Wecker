@@ -20,7 +20,6 @@ public class WeckerParameters  extends Application
 {
     String spotifyToken = "";
     SpotifyAppRemote spotifyConnect;
-
     String musicFolderPath = "";
 
     File selectedFolderMusic;
@@ -29,6 +28,10 @@ public class WeckerParameters  extends Application
 
     File emergencyTrack;
     ArrayList<Alarm> alarmList = new ArrayList<>();
+
+    boolean deezerChecked;
+    boolean spotifyChecked;
+    boolean folderChecked;
 
     @Override
     public void onCreate()
@@ -42,32 +45,10 @@ public class WeckerParameters  extends Application
         selectedFolderMusic = new File(sharedPrefs.getString("selectedFolderMusic",""));
         selectedDeezerMusic = sharedPrefs.getString("selectedDeezerMusic","");
         selectedSpotifyMusic = sharedPrefs.getString("selectedSpotifyMusic","");
+        deezerChecked = sharedPrefs.getBoolean("deezerChecked", false);
+        spotifyChecked = sharedPrefs.getBoolean("spotifyChecked", false);
+        folderChecked = sharedPrefs.getBoolean("folderChecked", false);
         alarmList = new Gson().fromJson(sharedPrefs.getString("alarmList", null), new TypeToken<ArrayList<Alarm>>() {}.getType());
-
-        if (spotifyToken.length() > 0)
-        {
-            ConnectionParams connectionParams =
-                    new ConnectionParams.Builder("46065021347f4ef3bd007487a2497d2f")
-                            .setRedirectUri("wecker://callback")
-                            .showAuthView(true)
-                            .build();
-
-            SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener()
-            {
-                @Override
-                public void onConnected(SpotifyAppRemote spotifyAppRemote)
-                {
-                    spotifyConnect = spotifyAppRemote;
-                    SpotifyAppRemote.disconnect(spotifyConnect);
-                }
-
-                @Override
-                public void onFailure(Throwable throwable)
-                {
-                    Log.e("OnCreateApplication", throwable.getMessage(), throwable);
-                }
-            });
-        }
     }
 
     public File getSelectedFolderMusic()
@@ -192,6 +173,51 @@ public class WeckerParameters  extends Application
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putString("alarmList", new Gson().toJson(alarmList));
+        editor.apply();
+    }
+
+    public boolean isDeezerChecked()
+    {
+        return deezerChecked;
+    }
+
+    public void setDeezerChecked(boolean deezerChecked)
+    {
+        this.deezerChecked = deezerChecked;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putBoolean("deezerChecked", false);
+        editor.apply();
+    }
+
+    public boolean isSpotifyChecked()
+    {
+        return spotifyChecked;
+    }
+
+    public void setSpotifyChecked(boolean spotifyChecked)
+    {
+        this.spotifyChecked = spotifyChecked;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putBoolean("spotifyChecked", false);
+        editor.apply();
+    }
+
+    public boolean isFolderChecked()
+    {
+        return folderChecked;
+    }
+
+    public void setFolderChecked(boolean folderChecked)
+    {
+        this.folderChecked = folderChecked;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putBoolean("folderChecked", false);
         editor.apply();
     }
 }

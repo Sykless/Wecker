@@ -41,6 +41,9 @@ public class Home extends BaseActivity
     ArrayList<Alarm> alarmList = new ArrayList<>();
     String[] daysValue = {"L","M","M","J","V","S","D"};
 
+    private static final int PARAMS = 0;
+    private static final int NEWALARM = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -285,10 +288,28 @@ public class Home extends BaseActivity
         }
     }
 
-    public void goToCreate(View view)
+    public void goToParams(View view)
     {
         Intent intent = new Intent(this, MusicOrigin.class);
+        intent.putExtra("origin",PARAMS);
         startActivity(intent);
+    }
+
+    public void goToNewAlarm(View view)
+    {
+        app = (WeckerParameters) getApplicationContext();
+
+        if (!app.isDeezerChecked() && !app.isSpotifyChecked() && !app.isFolderChecked())
+        {
+            Intent intent = new Intent(this, MusicOrigin.class);
+            intent.putExtra("origin",NEWALARM);
+            startActivity(intent);
+        }
+        else
+        {
+            Intent intent = new Intent(this, SetupPlaylist.class);
+            startActivity(intent);
+        }
     }
 
     @Override

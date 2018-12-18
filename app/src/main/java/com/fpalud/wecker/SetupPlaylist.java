@@ -96,10 +96,10 @@ public class SetupPlaylist extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.setup_playlist_layout);
 
-        Intent intent = getIntent();
-        deezerChecked = intent.getBooleanExtra("deezer",false);
-        spotifyChecked = intent.getBooleanExtra("spotify",false);
-        folderChecked = intent.getBooleanExtra("folder",false);
+        app = (WeckerParameters) getApplicationContext();
+        deezerChecked = app.isDeezerChecked();
+        spotifyChecked = app.isSpotifyChecked();
+        folderChecked = app.isFolderChecked();
 
         loadingBar = findViewById(R.id.loadingBar);
         songSwitch = findViewById(R.id.songSwitch);

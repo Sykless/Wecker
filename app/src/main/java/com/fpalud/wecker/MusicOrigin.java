@@ -77,6 +77,7 @@ public class MusicOrigin extends BaseActivity
     private static final int DEEZER = 0;
     private static final int SPOTIFY = 1;
     private static final int FOLDER = 2;
+    private static final int PARAMS = 0;
 
     private static final int REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "wecker://callback";
@@ -539,11 +540,24 @@ public class MusicOrigin extends BaseActivity
 
     public void goToSetupPlaylist()
     {
-        Intent intent = new Intent(this, SetupPlaylist.class);
-        intent.putExtra("deezer",deezerChecked);
-        intent.putExtra("spotify",spotifyChecked);
-        intent.putExtra("folder",folderChecked);
-        startActivity(intent);
+        app = (WeckerParameters) getApplicationContext();
+
+        app.setDeezerChecked(deezerChecked);
+        app.setSpotifyChecked(spotifyChecked);
+        app.setFolderChecked(folderChecked);
+
+        if (getIntent().getIntExtra("origin",PARAMS) == PARAMS)
+        {
+            Intent intent = new Intent(this, Home.class);
+            startActivity(intent);
+        }
+        else
+        {
+            Intent intent = new Intent(this, SetupPlaylist.class);
+            startActivity(intent);
+        }
+
+
     }
 
     public class SpotifyCrawler extends AsyncTask<String, Void, String>
