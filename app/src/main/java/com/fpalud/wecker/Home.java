@@ -54,7 +54,12 @@ public class Home extends BaseActivity
         alarmList = app.getAlarmList();
 
         mainLayout = findViewById(R.id.mainLayout);
+    }
 
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
         setupAlarmLayout();
     }
 
@@ -258,7 +263,7 @@ public class Home extends BaseActivity
             {
                 public void onClick(View v)
                 {
-                    // Change playlist
+                    goToSetupAlarm(v.getId());
                 }
             });
             newAlarm.setOnLongClickListener(new View.OnLongClickListener()
@@ -286,6 +291,14 @@ public class Home extends BaseActivity
 
             mainLayout.addView(parentLayout);
         }
+    }
+
+    public void goToSetupAlarm(int id)
+    {
+        Intent intent = new Intent(this, SetupAlarm.class);
+        intent.putExtra("fromHome",true);
+        intent.putExtra("alarmId",id);
+        startActivity(intent);
     }
 
     public void goToParams(View view)

@@ -313,23 +313,39 @@
 
     </RelativeLayout>
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="match_parent"
+    <ImageButton
+        android:id="@+id/musicParams"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="25dp"
-        android:layout_marginEnd="25dp"
-        android:layout_marginBottom="25dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="24dp"
+        android:adjustViewBounds="true"
         android:backgroundTint="#FFFFFF"
+        android:gravity="center"
+        android:onClick="goToSetupPlaylist"
+        android:padding="15dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/musicalnote"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/validate"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/validate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:adjustViewBounds="true"
+        android:backgroundTint="#FFFFFF"
+
         android:gravity="center"
         android:onClick="goToHome"
         android:padding="15dp"
-        android:text="Valider"
-        android:textAllCaps="false"
-        android:textColor="@color/ic_launcher_background"
-        android:textSize="40sp"
-        app:fontFamily="@font/carter_one"
+        android:scaleType="fitCenter"
+        android:src="@drawable/checked"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/musicParams" />
 </android.support.constraint.ConstraintLayout>

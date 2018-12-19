@@ -13,6 +13,12 @@ public class Alarm
     boolean active;
     int id;
 
+    Alarm()
+    {
+        setActive(true);
+        id = (int) System.currentTimeMillis();
+    }
+
     Alarm(int hours, int minutes, ArrayList<Boolean> days, ArrayList<String> idSongsList, boolean vibration, boolean emergencyAlarm)
     {
         setHours(hours);
@@ -21,7 +27,7 @@ public class Alarm
         setIdSongsList(idSongsList);
         setVibration(vibration);
         setEmergencyAlarm(emergencyAlarm);
-        active = true;
+        setActive(true);
         id = (int) System.currentTimeMillis();
 
         /*AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);

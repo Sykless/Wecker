@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -32,6 +33,9 @@ import com.deezer.sdk.network.request.DeezerRequest;
 import com.deezer.sdk.network.request.DeezerRequestFactory;
 import com.deezer.sdk.network.request.event.JsonRequestListener;
 import com.deezer.sdk.network.request.event.RequestListener;
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -72,15 +76,17 @@ public class SetupPlaylist extends BaseActivity
     private static final int SPOTIFY = 1;
     private static final int FOLDER = 2;
 
-    Boolean deezerChecked;
-    Boolean spotifyChecked;
-    Boolean folderChecked;
-    Boolean spotifyDisplayReady = false;
+    boolean deezerChecked;
+    boolean spotifyChecked;
+    boolean folderChecked;
+    boolean spotifyDisplayReady = false;
+    boolean fromAlarm = false;
     int attemptNumber = 2000;
 
     int deezerPlaylistnumber = 0;
     int spotifyPlaylistnumber = 0;
     int folderPlaylistnumber = 0;
+    int totalPlaylistnumber = 0;
 
     boolean spotifyConnected = false;
     boolean spotifyConnectionChecked = false;
@@ -89,6 +95,8 @@ public class SetupPlaylist extends BaseActivity
     private static final String REDIRECT_URI = "wecker://callback";
 
     WeckerParameters app;
+    Alarm currentAlarm;
+    int alarmId = -1;
 
     DeezerConnect deezerConnect;
     ArrayList<Playlist> deezerPlaylistList = new ArrayList<>();
@@ -96,6 +104,7 @@ public class SetupPlaylist extends BaseActivity
     ArrayList<String> spotifyPlaylistList = new ArrayList<>();
     ArrayList<String> spotifyPlaylistNameList = new ArrayList<>();
     ArrayList<String> idList = new ArrayList<>();
+    ArrayList<String> totalIdList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -143,6 +152,16 @@ public class SetupPlaylist extends BaseActivity
                 }
             }
         });
+
+        fromAlarm = getIntent().getBooleanExtra("fromAlarm",false);
+
+        if (fromAlarm)
+        {
+            alarmId = getIntent().getIntExtra("alarmId",0);
+
+            currentAlarm = app.getAlarmList().get(alarmId);
+            idList = currentAlarm.getIdSongsList();
+        }
 
         connectionSetup(INIT);
     }
@@ -192,10 +211,17 @@ public class SetupPlaylist extends BaseActivity
         {
             if (checkbox.isChecked())
             {
-                Intent intent = new Intent(this, SetupAlarm.class);
-                intent.putExtra("randomSong", !songSwitch.isChecked());
-                intent.putStringArrayListExtra("idList", idList);
-                startActivity(intent);
+                if (fromAlarm)
+                {
+                    finish();
+                }
+                else
+                {
+                    Intent intent = new Intent(this, SetupAlarm.class);
+                    intent.putExtra("randomSong", !songSwitch.isChecked());
+                    intent.putStringArrayListExtra("idList", idList);
+                    startActivity(intent);
+                }
 
                 break;
             }
@@ -601,7 +627,6 @@ public class SetupPlaylist extends BaseActivity
         newButton.setEllipsize(TextUtils.TruncateAt.MARQUEE);
         newButton.setTextColor(getResources().getColor(R.color.white));
         newButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-
         newButton.setOnClickListener(new View.OnClickListener()
         {
             public void onClick(View v)
@@ -677,9 +702,13 @@ public class SetupPlaylist extends BaseActivity
             newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
             checkBox.setId(deezerPlaylistnumber);
-            deezerPlaylistnumber++;
 
-            System.out.println(deezerPlaylistnumber*50);
+            if (fromAlarm)
+            {
+                checkBox.setChecked(idList.contains(String.valueOf(deezerCorrectPlaylistList.get(deezerPlaylistnumber).getId())));
+            }
+
+            deezerPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(750);
@@ -691,6 +720,12 @@ public class SetupPlaylist extends BaseActivity
             newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
             checkBox.setId(spotifyPlaylistnumber - 1);
+
+            if (fromAlarm)
+            {
+                checkBox.setChecked(idList.contains(spotifyPlaylistList.get(spotifyPlaylistnumber - 1)));
+            }
+
             spotifyPlaylistnumber++;
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
@@ -705,6 +740,11 @@ public class SetupPlaylist extends BaseActivity
             checkBox.setId(folderPlaylistnumber - 1);
             folderPlaylistnumber++;
 
+            if (fromAlarm)
+            {
+                checkBox.setChecked(idList.contains("folderMusic"));
+            }
+
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(750);
             anim.setStartOffset(50*(deezerPlaylistnumber + spotifyPlaylistnumber + 2));
@@ -715,6 +755,8 @@ public class SetupPlaylist extends BaseActivity
 
         newPlaylist.addView(checkboxLayout);
         newPlaylist.addView(newButton);
+
+        totalPlaylistnumber++;
 
         // Add the RelativeLayout to the main LinearLayout
         playlistLayout.addView(newPlaylist);
@@ -913,29 +955,78 @@ public class SetupPlaylist extends BaseActivity
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent intent)
     {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE)
+        if (app.getSpotifyConnect() == null)
         {
-            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+            ConnectionParams connectionParams =
+                    new ConnectionParams.Builder("46065021347f4ef3bd007487a2497d2f")
+                            .setRedirectUri(REDIRECT_URI)
+                            .showAuthView(true)
+                            .build();
 
-            if (response.getType() == TOKEN)
+            SpotifyAppRemote.connect(this, connectionParams,
+                    new Connector.ConnectionListener()
+                    {
+                        @Override
+                        public void onConnected(SpotifyAppRemote spotifyAppRemote)
+                        {
+                            app.setSpotifyConnect(spotifyAppRemote);
+                            SpotifyAppRemote.disconnect(spotifyAppRemote);
+
+                            if (requestCode == REQUEST_CODE)
+                            {
+                                AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+
+                                if (response.getType() == TOKEN)
+                                {
+                                    app = (WeckerParameters) getApplicationContext();
+                                    app.setSpotifyToken(response.getAccessToken());
+
+                                    spotifyConnectionChecked = true;
+
+                                    new SpotifyCrawler().execute("me/tracks");
+                                    new SpotifyCrawler().execute("me/playlists");
+                                }
+                                else
+                                {
+                                    System.out.println("Connection failed : " + response.getError());
+                                    connectionSetup(SPOTIFY);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable)
+                        {
+                            Log.e("MusicOrigin", throwable.getMessage(), throwable);
+                            connectionSetup(SPOTIFY);
+                        }
+                    });
+        }
+        else
+        {
+            if (requestCode == REQUEST_CODE)
             {
-                app = (WeckerParameters) getApplicationContext();
-                app.setSpotifyToken(response.getAccessToken());
+                AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
 
-                spotifyConnectionChecked = true;
+                if (response.getType() == TOKEN)
+                {
+                    app = (WeckerParameters) getApplicationContext();
+                    app.setSpotifyToken(response.getAccessToken());
 
-                new SpotifyCrawler().execute("me/tracks");
-                new SpotifyCrawler().execute("me/playlists");
-            }
-            else
-            {
-                System.out.println("Connection failed : " + response.getError());
-                connectionSetup(SPOTIFY);
+                    spotifyConnectionChecked = true;
+
+                    new SpotifyCrawler().execute("me/tracks");
+                    new SpotifyCrawler().execute("me/playlists");
+                }
+                else
+                {
+                    System.out.println("Connection failed : " + response.getError());
+                    connectionSetup(SPOTIFY);
+                }
             }
         }
     }
