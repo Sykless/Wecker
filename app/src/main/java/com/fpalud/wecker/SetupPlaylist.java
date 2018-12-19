@@ -1,20 +1,18 @@
 package com.fpalud.wecker;
 
-import android.app.AlarmManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.ColorFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.content.res.ResourcesCompat;
 import android.os.Bundle;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.CompoundButtonCompat;
-import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.util.TypedValue;
-import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -24,6 +22,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.deezer.sdk.model.Playlist;
 import com.deezer.sdk.model.Track;
@@ -33,7 +32,9 @@ import com.deezer.sdk.network.request.DeezerRequest;
 import com.deezer.sdk.network.request.DeezerRequestFactory;
 import com.deezer.sdk.network.request.event.JsonRequestListener;
 import com.deezer.sdk.network.request.event.RequestListener;
-import com.google.gson.JsonObject;
+import com.spotify.sdk.android.authentication.AuthenticationClient;
+import com.spotify.sdk.android.authentication.AuthenticationRequest;
+import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -50,6 +51,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
 public class SetupPlaylist extends BaseActivity
 {
@@ -72,14 +75,18 @@ public class SetupPlaylist extends BaseActivity
     Boolean deezerChecked;
     Boolean spotifyChecked;
     Boolean folderChecked;
-    Boolean deezerTitleSetup = false;
-    Boolean spotifyTitleSetup = false;
     Boolean spotifyDisplayReady = false;
-    int attemptNumber = 1000;
+    int attemptNumber = 2000;
 
     int deezerPlaylistnumber = 0;
     int spotifyPlaylistnumber = 0;
     int folderPlaylistnumber = 0;
+
+    boolean spotifyConnected = false;
+    boolean spotifyConnectionChecked = false;
+
+    private static final int REQUEST_CODE = 1337;
+    private static final String REDIRECT_URI = "wecker://callback";
 
     WeckerParameters app;
 
@@ -195,53 +202,72 @@ public class SetupPlaylist extends BaseActivity
         }
     }
 
+    private boolean isNetworkAvailable()
+    {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     public void connectionSetup(int origin)
     {
         System.out.println(origin + " - " + deezerChecked + " - " + spotifyChecked + " - " + folderChecked);
 
-        if (origin == INIT)
+        if ((deezerChecked || spotifyChecked) && !isNetworkAvailable())
         {
-            if (deezerChecked)
-            {
-                if (spotifyChecked)
-                {
-                    new SpotifyCrawler().execute("me/tracks");
-                    new SpotifyCrawler().execute("me/playlists");
-                }
+            Toast.makeText(app, "Pas de connexion Internet.", Toast.LENGTH_SHORT).show();
 
-                getDeezerPlaylists();
-            }
-            else if (spotifyChecked)
-            {
-                new SpotifyCrawler().execute("me/tracks");
-                new SpotifyCrawler().execute("me/playlists");
-            }
-            else
-            {
-                getFolderSongs();
-            }
-        }
-
-        if (origin == DEEZER)
-        {
-            if (spotifyChecked)
-            {
-                new SpotifyCrawler().execute("me/tracks");
-                new SpotifyCrawler().execute("me/playlists");
-            }
-            else if (folderChecked)
-            {
-                getFolderSongs();
-            }
-        }
-
-        if (origin == SPOTIFY)
-        {
             if (folderChecked)
             {
                 getFolderSongs();
             }
         }
+        else
+        {
+            if (origin == INIT)
+            {
+                if (deezerChecked)
+                {
+                    if (spotifyChecked)
+                    {
+                        new SpotifyCrawler().execute("me");
+                    }
+
+                    getDeezerPlaylists();
+                }
+                else if (spotifyChecked)
+                {
+                    new SpotifyCrawler().execute("me");
+                }
+                else
+                {
+                    getFolderSongs();
+                }
+            }
+
+            if (origin == DEEZER)
+            {
+                if (spotifyChecked)
+                {
+                    new SpotifyCrawler().execute("me");
+                }
+                else if (folderChecked)
+                {
+                    getFolderSongs();
+                }
+            }
+
+            if (origin == SPOTIFY)
+            {
+                if (folderChecked)
+                {
+                    getFolderSongs();
+                }
+            }
+        }
+
+
     }
 
     public void getDeezerPlaylists()
@@ -308,37 +334,58 @@ public class SetupPlaylist extends BaseActivity
                             {
                                 if (!spotifyDisplayReady && attemptNumber > 0)
                                 {
+                                    attemptNumber--;
                                     handler.postDelayed(this, 10);
+                                }
+                                else
+                                {
+                                    if (deezerCorrectPlaylistList.size() > 0)
+                                    {
+                                        loadingBar.setVisibility(View.GONE);
+                                        addTitle("Deezer");
+                                    }
+
+                                    for (Playlist playlist : deezerCorrectPlaylistList)
+                                    {
+                                        if (playlist.isLovedTracks())
+                                        {
+                                            addPlaylist(DEEZER, "Musique préférées");
+                                        }
+                                        else
+                                        {
+                                            addPlaylist(DEEZER, playlist.getTitle());
+                                        }
+                                    }
+
+                                    displaySpotifyPlaylists();
                                 }
                             }
                         }, 0);
                     }
-
-                    if (deezerCorrectPlaylistList.size() > 0)
+                    else
                     {
-                        loadingBar.setVisibility(View.GONE);
-                        addTitle("Deezer");
-                    }
-
-                    for (Playlist playlist : deezerCorrectPlaylistList)
-                    {
-                        if (playlist.isLovedTracks())
+                        if (deezerCorrectPlaylistList.size() > 0)
                         {
-                            addPlaylist(DEEZER, "Musique préférées");
+                            loadingBar.setVisibility(View.GONE);
+                            addTitle("Deezer");
                         }
-                        else
-                        {
-                            addPlaylist(DEEZER, playlist.getTitle());
-                        }
-                    }
 
-                    if (spotifyChecked)
-                    {
-                        displaySpotifyPlaylists();
-                    }
-                    else if (folderChecked)
-                    {
-                        getFolderSongs();
+                        for (Playlist playlist : deezerCorrectPlaylistList)
+                        {
+                            if (playlist.isLovedTracks())
+                            {
+                                addPlaylist(DEEZER, "Musique préférées");
+                            }
+                            else
+                            {
+                                addPlaylist(DEEZER, playlist.getTitle());
+                            }
+                        }
+
+                        if (folderChecked)
+                        {
+                            getFolderSongs();
+                        }
                     }
                 }
                 else
@@ -359,6 +406,7 @@ public class SetupPlaylist extends BaseActivity
 
     public void displaySpotifyPlaylists()
     {
+        System.out.println("Top");
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable()
         {
@@ -631,6 +679,8 @@ public class SetupPlaylist extends BaseActivity
             checkBox.setId(deezerPlaylistnumber);
             deezerPlaylistnumber++;
 
+            System.out.println(deezerPlaylistnumber*50);
+
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
             anim.setDuration(750);
             anim.setStartOffset(50*deezerPlaylistnumber);
@@ -723,60 +773,81 @@ public class SetupPlaylist extends BaseActivity
 
             System.out.println(server_response);
 
-            if (server_response.length() == 0)
+            if (spotifyConnectionChecked)
             {
-                connectionSetup(SPOTIFY);
+                if (server_response.length() == 0)
+                {
+                    connectionSetup(SPOTIFY);
+                }
+                else
+                {
+                    if ("me/playlists".equals(endpoint))
+                    {
+                        try
+                        {
+                            JSONArray playlistJSONList = (JSONArray) server_response.get("items");
+
+                            if (playlistJSONList != null)
+                            {
+                                for (int i = 0 ; i < playlistJSONList.length() ; i++)
+                                {
+                                    JSONObject tracks = (JSONObject) playlistJSONList.optJSONObject(i).get("tracks");
+
+                                    if (!"0".equals(tracks.getString("total")))
+                                    {
+                                        spotifyPlaylistList.add(playlistJSONList.optJSONObject(i).getString("id"));
+                                        spotifyPlaylistNameList.add(playlistJSONList.optJSONObject(i).getString("name"));
+
+                                        System.out.println("Added");
+                                    }
+                                }
+
+                                spotifyDisplayReady = true;
+
+                                if (!deezerChecked)
+                                {
+                                    System.out.println("Deezer not checked");
+                                    displaySpotifyPlaylists();
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            connectionSetup(SPOTIFY);
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                    else if ("me/tracks".equals(endpoint))
+                    {
+                        try
+                        {
+                            if (!"0".equals(server_response.getString("total")))
+                            {
+                                spotifyPlaylistNameList.add("Musique préférées");
+                                spotifyPlaylistList.add("spotifyLovedSongs");
+
+                                System.out.println("Added loved");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            connectionSetup(SPOTIFY);
+                            System.out.println(e.getMessage());
+                        }
+                    }
+                }
             }
             else
             {
-                if ("me/playlists".equals(endpoint))
+                if (server_response.length() == 0)
                 {
-                    try
-                    {
-                        JSONArray playlistJSONList = (JSONArray) server_response.get("items");
-
-                        if (playlistJSONList != null)
-                        {
-                            for (int i = 0 ; i < playlistJSONList.length() ; i++)
-                            {
-                                JSONObject tracks = (JSONObject) playlistJSONList.optJSONObject(i).get("tracks");
-
-                                if (!"0".equals(tracks.getString("total")))
-                                {
-                                    spotifyPlaylistList.add(playlistJSONList.optJSONObject(i).getString("id"));
-                                    spotifyPlaylistNameList.add(playlistJSONList.optJSONObject(i).getString("name"));
-                                }
-                            }
-
-                            spotifyDisplayReady = true;
-
-                            if (!deezerChecked)
-                            {
-                                displaySpotifyPlaylists();
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        connectionSetup(SPOTIFY);
-                        System.out.println(e.getMessage());
-                    }
+                    spotifyConnect();
                 }
-                else if ("me/tracks".equals(endpoint))
+                else
                 {
-                    try
-                    {
-                        if (!"0".equals(server_response.getString("total")))
-                        {
-                            spotifyPlaylistNameList.add("Musique préférées");
-                            spotifyPlaylistList.add("spotifyLovedSongs");
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        connectionSetup(SPOTIFY);
-                        System.out.println(e.getMessage());
-                    }
+                    spotifyConnectionChecked = true;
+                    new SpotifyCrawler().execute("me/tracks");
+                    new SpotifyCrawler().execute("me/playlists");
                 }
             }
         }
@@ -828,6 +899,44 @@ public class SetupPlaylist extends BaseActivity
             }
 
             return null;
+        }
+    }
+
+    public void spotifyConnect()
+    {
+        AuthenticationRequest.Builder builder =
+                new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", TOKEN, REDIRECT_URI);
+
+        builder.setScopes(new String[]{"streaming","user-library-read"});
+        AuthenticationRequest request = builder.build();
+
+        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+    {
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        // Check if result comes from the correct activity
+        if (requestCode == REQUEST_CODE)
+        {
+            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+
+            if (response.getType() == TOKEN)
+            {
+                app = (WeckerParameters) getApplicationContext();
+                app.setSpotifyToken(response.getAccessToken());
+
+                spotifyConnectionChecked = true;
+
+                new SpotifyCrawler().execute("me/tracks");
+                new SpotifyCrawler().execute("me/playlists");
+            }
+            else
+            {
+                System.out.println("Connection failed : " + response.getError());
+                connectionSetup(SPOTIFY);
+            }
         }
     }
 }

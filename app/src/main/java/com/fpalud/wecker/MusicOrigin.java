@@ -1,5 +1,6 @@
 package com.fpalud.wecker;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -7,43 +8,26 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.deezer.sdk.model.Permissions;
 import com.deezer.sdk.network.connect.DeezerConnect;
 import com.deezer.sdk.network.connect.SessionStore;
 import com.deezer.sdk.network.connect.event.DialogListener;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.spotify.sdk.android.authentication.AuthenticationClient;
-import com.spotify.sdk.android.authentication.AuthenticationRequest;
-import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import yogesh.firzen.filelister.FileListerDialog;
 import yogesh.firzen.filelister.OnFileSelectedListener;
-
-import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
 public class MusicOrigin extends BaseActivity
 {
@@ -62,25 +46,13 @@ public class MusicOrigin extends BaseActivity
     boolean spotifyChecked;
     boolean folderChecked;
 
-    boolean deezerConnectionChecked = false;
-    boolean spotifyConnectionChecked = false;
-    boolean folderConnectionChecked = false;
-
-    boolean deezerConnected = false;
-    boolean spotifyConnected = false;
-    boolean spotifyAPKConnected = false;
-
     boolean installingSpotify = false;
-    boolean grantingPermission = false;
 
     private static final int INIT = -1;
     private static final int DEEZER = 0;
     private static final int SPOTIFY = 1;
     private static final int FOLDER = 2;
     private static final int PARAMS = 0;
-
-    private static final int REQUEST_CODE = 1337;
-    private static final String REDIRECT_URI = "wecker://callback";
 
     WeckerParameters app;
     DeezerConnect deezerConnect;
@@ -91,6 +63,8 @@ public class MusicOrigin extends BaseActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.music_origin_layout);
+
+        app = (WeckerParameters) getApplicationContext();
 
         deezerBox = findViewById(R.id.deezerBox);
         spotifyBox = findViewById(R.id.spotifyBox);
@@ -170,6 +144,10 @@ public class MusicOrigin extends BaseActivity
 
         fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
         fileListerDialog.setFileFilter(FileListerDialog.FILE_FILTER.ALL_FILES);
+
+        deezerBox.setChecked(app.isDeezerChecked());
+        spotifyBox.setChecked(app.isSpotifyChecked());
+        folderBox.setChecked(app.isFolderChecked());
     }
 
     @Override
@@ -182,27 +160,8 @@ public class MusicOrigin extends BaseActivity
             installingSpotify = false;
             if (SpotifyAppRemote.isSpotifyInstalled(app))
             {
-                spotifyConnectionCheck();
+                spotifyConnection();
             }
-        }
-        else if (grantingPermission)
-        {
-            grantingPermission = false;
-            if (isReadPermissionEnabled())
-            {
-                folderConnectionCheck();
-            }
-        }
-        else
-        {
-            app = (WeckerParameters) getApplicationContext();
-
-            deezerConnect = DeezerConnect.forApp("315304").build();
-            deezerConnected = new SessionStore().restore(deezerConnect, this);
-
-            new SpotifyCrawler().execute("me");
-
-            System.out.println("Deezer Connected : " + deezerConnected);
         }
     }
 
@@ -226,18 +185,23 @@ public class MusicOrigin extends BaseActivity
         spotifyChecked = spotifyBox.isChecked();
         folderChecked = folderBox.isChecked();
 
-        if (!isNetworkAvailable() && (deezerChecked || spotifyChecked))
+        if (deezerChecked && !isNetworkAvailable())
         {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            deezerConnect = DeezerConnect.forApp("315304").build();
 
-            builder.setMessage("Ces fonctionnalités nécéssitent une connexion Internet.\n\nVérifiez votre connexion et rééssayez.")
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog, int id) {}
-                    });
+            if (!new SessionStore().restore(deezerConnect, this))
+            {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-            AlertDialog alert = builder.create();
-            alert.show();
+                builder.setMessage("Vous devez être connecté à Internet pour lier l'application à Deezer.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                        {
+                            public void onClick(DialogInterface dialog, int id) {}
+                        });
+
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
         }
         else if (deezerChecked || spotifyChecked || folderChecked)
         {
@@ -251,15 +215,15 @@ public class MusicOrigin extends BaseActivity
         {
             if (deezerChecked)
             {
-                deezerConnectionCheck();
+                deezerConnection();
             }
             else if (spotifyChecked)
             {
-                spotifyConnectionCheck();
+                spotifyConnection();
             }
             else
             {
-                folderConnectionCheck();
+                folderConnection();
             }
         }
 
@@ -269,11 +233,11 @@ public class MusicOrigin extends BaseActivity
 
             if (spotifyChecked)
             {
-                spotifyConnectionCheck();
+                spotifyConnection();
             }
             else if (folderChecked)
             {
-                folderConnectionCheck();
+                folderConnection();
             }
             else
             {
@@ -290,7 +254,7 @@ public class MusicOrigin extends BaseActivity
 
             if (folderChecked)
             {
-                folderConnectionCheck();
+                folderConnection();
             }
             else
             {
@@ -312,54 +276,49 @@ public class MusicOrigin extends BaseActivity
         }
     }
 
-    public void deezerConnectionCheck()
-    {
-        if (!deezerConnected)
-        {
-            deezerConnection();
-        }
-        else
-        {
-            connectionSetup(DEEZER,true);
-        }
-    }
-
     public void deezerConnection()
     {
         deezerConnect = DeezerConnect.forApp("315304").build();
 
-        String[] permissions = new String[]{
-                Permissions.BASIC_ACCESS,
-                Permissions.MANAGE_LIBRARY,
-                Permissions.LISTENING_HISTORY};
+        if (new SessionStore().restore(deezerConnect, this))
+        {
+            connectionSetup(DEEZER,true);
+        }
+        else
+        {
+            String[] permissions = new String[]{
+                    Permissions.BASIC_ACCESS,
+                    Permissions.MANAGE_LIBRARY,
+                    Permissions.LISTENING_HISTORY};
 
-        // The listener for authentication events
-        DialogListener listener = new DialogListener() {
-            public void onComplete(Bundle values) {
-                deezerConnected = true;
-                SessionStore sessionStore = new SessionStore();
-                sessionStore.save(deezerConnect, getApplicationContext());
+            // The listener for authentication events
+            DialogListener listener = new DialogListener() {
+                public void onComplete(Bundle values)
+                {
+                    SessionStore sessionStore = new SessionStore();
+                    sessionStore.save(deezerConnect, getApplicationContext());
 
-                connectionSetup(DEEZER, true);
-            }
+                    connectionSetup(DEEZER, true);
+                }
 
-            public void onCancel()
-            {
-                connectionSetup(DEEZER, false);
-            }
+                public void onCancel()
+                {
+                    connectionSetup(DEEZER, false);
+                }
 
-            public void onException(Exception e)
-            {
-                Log.e("Deezer connection error",e.getMessage());
-                connectionSetup(DEEZER, false);
-            }
-        };
+                public void onException(Exception e)
+                {
+                    Log.e("Deezer connection error",e.getMessage());
+                    connectionSetup(DEEZER, false);
+                }
+            };
 
-        // Launches the authentication process
-        deezerConnect.authorize(this, permissions, listener);
+            // Launches the authentication process
+            deezerConnect.authorize(this, permissions, listener);
+        }
     }
 
-    public void spotifyConnectionCheck()
+    public void spotifyConnection()
     {
         if (!SpotifyAppRemote.isSpotifyInstalled(app))
         {
@@ -369,29 +328,36 @@ public class MusicOrigin extends BaseActivity
                 {
                     if (which == DialogInterface.BUTTON_POSITIVE)
                     {
-                        installingSpotify = true;
-                        final String appPackageName = "com.spotify.music";
-                        final String referrer = "adjust_campaign=com.fpalud.wecker&adjust_tracker=ndjczk&utm_source=adjust_preinstall";
-
-                        try
+                        if (isNetworkAvailable())
                         {
-                            Uri uri = Uri.parse("market://details")
-                                    .buildUpon()
-                                    .appendQueryParameter("id", appPackageName)
-                                    .appendQueryParameter("referrer", referrer)
-                                    .build();
+                            installingSpotify = true;
+                            final String appPackageName = "com.spotify.music";
+                            final String referrer = "adjust_campaign=com.fpalud.wecker&adjust_tracker=ndjczk&utm_source=adjust_preinstall";
 
-                            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                            try
+                            {
+                                Uri uri = Uri.parse("market://details")
+                                        .buildUpon()
+                                        .appendQueryParameter("id", appPackageName)
+                                        .appendQueryParameter("referrer", referrer)
+                                        .build();
+
+                                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                            }
+                            catch (android.content.ActivityNotFoundException ignored)
+                            {
+                                Uri uri = Uri.parse("https://play.google.com/store/apps/details")
+                                        .buildUpon()
+                                        .appendQueryParameter("id", appPackageName)
+                                        .appendQueryParameter("referrer", referrer)
+                                        .build();
+
+                                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                            }
                         }
-                        catch (android.content.ActivityNotFoundException ignored)
+                        else
                         {
-                            Uri uri = Uri.parse("https://play.google.com/store/apps/details")
-                                    .buildUpon()
-                                    .appendQueryParameter("id", appPackageName)
-                                    .appendQueryParameter("referrer", referrer)
-                                    .build();
-
-                            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                            Toast.makeText(app, "Pas de connexion Internet.", Toast.LENGTH_SHORT).show();
                         }
                     }
                     else
@@ -407,57 +373,17 @@ public class MusicOrigin extends BaseActivity
         }
         else
         {
-            if (!spotifyConnected || !spotifyAPKConnected)
-            {
-                spotifyConnection();
-            }
-            else
-            {
-                connectionSetup(SPOTIFY,true);
-            }
+            connectionSetup(SPOTIFY,true);
         }
     }
 
-    public void spotifyConnection()
-    {
-        AuthenticationRequest.Builder builder =
-                new AuthenticationRequest.Builder("46065021347f4ef3bd007487a2497d2f", TOKEN, REDIRECT_URI);
-
-        builder.setScopes(new String[]{"streaming","user-library-read"});
-        AuthenticationRequest request = builder.build();
-
-        AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
-    }
-
-    public void folderConnectionCheck()
+    public void folderConnection()
     {
         app = (WeckerParameters) getApplicationContext();
 
         if (!isReadPermissionEnabled())
         {
-            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which)
-                {
-                    if (which == DialogInterface.BUTTON_POSITIVE)
-                    {
-                        grantingPermission = true;
-                        Intent intent = new Intent();
-                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Uri uri = Uri.fromParts("package", getPackageName(), null);
-                        intent.setData(uri);
-                        startActivity(intent);
-                    }
-                    else
-                    {
-                        connectionSetup(FOLDER, false);
-                    }
-                }
-            };
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Vous devez accorder la permission à l'application d'accéder à vos fichiers.\n\nSe rendre dans les paramètres ?").setNegativeButton("Non", dialogClickListener)
-                    .setPositiveButton("Oui", dialogClickListener).show();
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }
         else if (app.getMusicFolderPath().length() == 0)
         {
@@ -486,55 +412,18 @@ public class MusicOrigin extends BaseActivity
         }
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
-        super.onActivityResult(requestCode, resultCode, intent);
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE)
+        if (grantResults[0]== PackageManager.PERMISSION_GRANTED)
         {
-            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
-
-            if (response.getType() == TOKEN)
-            {
-                app = (WeckerParameters) getApplicationContext();
-                app.setSpotifyToken(response.getAccessToken());
-
-                spotifyConnected = true;
-
-                // You only need to connect to SpotifyAppRemote to play music
-                ConnectionParams connectionParams =
-                        new ConnectionParams.Builder("46065021347f4ef3bd007487a2497d2f")
-                                .setRedirectUri(REDIRECT_URI)
-                                .showAuthView(true)
-                                .build();
-
-                SpotifyAppRemote.connect(this, connectionParams,
-                        new Connector.ConnectionListener()
-                        {
-                            @Override
-                            public void onConnected(SpotifyAppRemote spotifyAppRemote)
-                            {
-                                spotifyAPKConnected = true;
-
-                                app.setSpotifyConnect(spotifyAppRemote);
-                                SpotifyAppRemote.disconnect(spotifyAppRemote);
-                                connectionSetup(SPOTIFY,true);
-                            }
-
-                            @Override
-                            public void onFailure(Throwable throwable)
-                            {
-                                Log.e("MusicOrigin", throwable.getMessage(), throwable);
-                                connectionSetup(SPOTIFY,false);
-                            }
-                        });
-            }
-            else
-            {
-                System.out.println("Connection failed : " + response.getError());
-                connectionSetup(SPOTIFY,false);
-            }
+            folderConnection();
+        }
+        else
+        {
+            connectionSetup(FOLDER, false);
         }
     }
 
@@ -555,101 +444,6 @@ public class MusicOrigin extends BaseActivity
         {
             Intent intent = new Intent(this, SetupPlaylist.class);
             startActivity(intent);
-        }
-
-
-    }
-
-    public class SpotifyCrawler extends AsyncTask<String, Void, String>
-    {
-        JSONObject server_response = new JSONObject();
-
-        @Override
-        protected String doInBackground(String... strings)
-        {
-            try
-            {
-                app = (WeckerParameters) getApplicationContext();
-
-                URL url = new URL("https://api.spotify.com/v1/" + strings[0]);
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestProperty("Authorization", "Bearer " + app.getSpotifyToken());
-
-                if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK)
-                {
-                    server_response = readStream(urlConnection.getInputStream());
-                }
-            }
-            catch (MalformedURLException e)
-            {
-                System.out.println("MalformedURLException : " + e.getMessage());
-            }
-            catch (IOException e)
-            {
-                System.out.println("IOException : " + e.getMessage());
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String s)
-        {
-            super.onPostExecute(s);
-
-            spotifyConnected = (server_response.length() > 0);
-            spotifyAPKConnected = (app.getSpotifyConnect() != null);
-
-            System.out.println("Spotify Connected : " + spotifyConnected);
-            System.out.println("Spotify APK Connected : " + spotifyAPKConnected);
-
-            spotifyConnectionChecked = true;
-        }
-
-        JSONObject readStream(InputStream in)
-        {
-            BufferedReader reader = null;
-            StringBuilder response = new StringBuilder();
-
-            try
-            {
-                reader = new BufferedReader(new InputStreamReader(in));
-                String line = "";
-
-                while ((line = reader.readLine()) != null)
-                {
-                    response.append(line);
-                }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-            finally
-            {
-                if (reader != null)
-                {
-                    try
-                    {
-                        reader.close();
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            try
-            {
-                return new JSONObject(response.toString());
-            }
-            catch (Throwable t)
-            {
-                System.out.println("Could not parse malformed JSON");
-            }
-
-            return null;
         }
     }
 }

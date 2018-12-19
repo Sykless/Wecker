@@ -18,16 +18,16 @@ import java.util.ArrayList;
 
 public class WeckerParameters  extends Application
 {
-    String spotifyToken = "";
+    String spotifyToken;
     SpotifyAppRemote spotifyConnect;
-    String musicFolderPath = "";
+    String musicFolderPath;
 
     File selectedFolderMusic;
     String selectedDeezerMusic;
     String selectedSpotifyMusic;
 
     File emergencyTrack;
-    ArrayList<Alarm> alarmList = new ArrayList<>();
+    ArrayList<Alarm> alarmList;
 
     boolean deezerChecked;
     boolean spotifyChecked;
@@ -49,6 +49,11 @@ public class WeckerParameters  extends Application
         spotifyChecked = sharedPrefs.getBoolean("spotifyChecked", false);
         folderChecked = sharedPrefs.getBoolean("folderChecked", false);
         alarmList = new Gson().fromJson(sharedPrefs.getString("alarmList", null), new TypeToken<ArrayList<Alarm>>() {}.getType());
+
+        if (alarmList == null)
+        {
+            alarmList = new ArrayList<>();
+        }
     }
 
     public File getSelectedFolderMusic()
@@ -187,7 +192,7 @@ public class WeckerParameters  extends Application
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putBoolean("deezerChecked", false);
+        editor.putBoolean("deezerChecked", deezerChecked);
         editor.apply();
     }
 
@@ -202,7 +207,7 @@ public class WeckerParameters  extends Application
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putBoolean("spotifyChecked", false);
+        editor.putBoolean("spotifyChecked", spotifyChecked);
         editor.apply();
     }
 
@@ -217,7 +222,7 @@ public class WeckerParameters  extends Application
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putBoolean("folderChecked", false);
+        editor.putBoolean("folderChecked", folderChecked);
         editor.apply();
     }
 }
