@@ -1,5 +1,8 @@
 package com.fpalud.wecker;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -16,6 +19,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class SetupAlarm extends BaseActivity
 {
@@ -43,6 +48,9 @@ public class SetupAlarm extends BaseActivity
 
     ArrayList<Button> dayButtons = new ArrayList<>();
     ArrayList<Boolean> buttonClicked = new ArrayList<>(Arrays.asList(false, false, false, false, false, false, false));
+
+    int[] days = {7,6,0,1,2,3,4,5};
+    int[] endMonth = {31,28,31,30,31,30,31,31,30,31,30,31};
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -278,11 +286,16 @@ public class SetupAlarm extends BaseActivity
         alarm.setVibration(vibrateBox.isChecked());
         alarm.setEmergencyAlarm(emergencyBox.isChecked());
 
+        setupAlarm(alarm);
+
         app = (WeckerParameters) getApplicationContext();
 
         if (getIntent().getBooleanExtra("fromHome",false))
         {
-            app.getAlarmList().set(alarmId,alarm);
+            ArrayList<Alarm> alarmList = app.getAlarmList();
+            alarmList.set(alarmId,alarm);
+            app.setAlarmList(alarmList);
+
             finish();
         }
         else
@@ -374,5 +387,128 @@ public class SetupAlarm extends BaseActivity
 
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    public void setupAlarm(Alarm alarm)
+    {
+        removeAlarm(alarm);
+
+        Calendar futureDate = Calendar.getInstance();
+        int originalHours = futureDate.get(Calendar.HOUR_OF_DAY);
+        int originalMinutes = futureDate.get(Calendar.MINUTE);
+        int originalDate = futureDate.get(Calendar.DATE);
+        int originalDay = days[futureDate.get(Calendar.DAY_OF_WEEK)];
+        int originalMonth = futureDate.get(Calendar.MONTH);
+        int originalYear = futureDate.get(Calendar.YEAR);
+
+        int day = originalDay;
+
+        ArrayList<Boolean> daysList = alarm.getDays();
+        int wantedHour = alarm.getHours();
+        int wantedMinutes = alarm.getMinutes();
+        int wantedDay;
+        int wantedDate;
+        int wantedMonth;
+        int wantedYear;
+        int counter;
+
+        if (daysList.get(day) && (wantedHour < originalHours || wantedHour == originalHours && wantedMinutes <= originalMinutes))
+        {
+            day = (day + 1) % 7;
+        }
+
+        for (counter = 0 ; counter < 7 && !daysList.get(day) ; counter++)
+        {
+            day = (day + 1) % 7;
+        }
+
+        if (counter != 7)
+        {
+            wantedDay = day;
+            int dayDifference = 0;
+
+            if (wantedDay == originalDay)
+            {
+                if (counter != 0)
+                {
+                    dayDifference = 7;
+                }
+            }
+            else if (originalDay > wantedDay)
+            {
+                dayDifference = wantedDay + 7 - originalDay;
+            }
+            else
+            {
+                dayDifference = wantedDay - originalDay;
+            }
+
+            if (new GregorianCalendar().isLeapYear(originalYear))
+            {
+                endMonth[1] = 29;
+            }
+
+            if (originalDate + dayDifference > endMonth[originalMonth])
+            {
+                wantedDate = originalDate + dayDifference - endMonth[originalMonth];
+
+                if (originalMonth < 11)
+                {
+                    wantedMonth = originalMonth + 1;
+                    wantedYear = originalYear;
+                }
+                else
+                {
+                    wantedMonth = 0;
+                    wantedYear = originalYear + 1;
+                }
+            }
+            else
+            {
+                wantedDate = originalDate + dayDifference;
+                wantedMonth = originalMonth;
+                wantedYear = originalYear;
+            }
+
+            endMonth[1] = 28;
+
+            futureDate.set(Calendar.HOUR_OF_DAY, wantedHour);
+            futureDate.set(Calendar.MINUTE, wantedMinutes);
+            futureDate.set(Calendar.SECOND, 0);
+            futureDate.set(Calendar.DATE, wantedDate);
+            futureDate.set(Calendar.MONTH, wantedMonth);
+            futureDate.set(Calendar.YEAR, wantedYear);
+
+            AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+
+            Intent intent = new Intent(this, LaunchAlarm.class);
+            intent.putExtra("alarmId",alarm.getId());
+            PendingIntent sender = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
+
+            System.out.println(futureDate.getTime());
+        }
+        else
+        {
+            System.out.println("No day selected");
+        }
+    }
+
+    public void removeAlarm(Alarm alarm)
+    {
+        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, LaunchAlarm.class);
+        PendingIntent sender = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        try
+        {
+            alarmManager.cancel(sender);
+        }
+        catch (Exception e)
+        {
+            System.out.println("AlarmManager update was not canceled. " + e.toString());
+        }
     }
 }

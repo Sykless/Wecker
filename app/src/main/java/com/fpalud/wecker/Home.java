@@ -1,5 +1,8 @@
 package com.fpalud.wecker;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.AnimationDrawable;
@@ -29,6 +32,8 @@ import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class Home extends BaseActivity
 {
@@ -40,6 +45,8 @@ public class Home extends BaseActivity
 
     ArrayList<Alarm> alarmList = new ArrayList<>();
     String[] daysValue = {"L","M","M","J","V","S","D"};
+    int[] days = {7,6,0,1,2,3,4,5};
+    int[] endMonth = {31,28,31,30,31,30,31,31,30,31,30,31};
 
     private static final int PARAMS = 0;
     private static final int NEWALARM = 1;
@@ -54,6 +61,17 @@ public class Home extends BaseActivity
         alarmList = app.getAlarmList();
 
         mainLayout = findViewById(R.id.mainLayout);
+
+        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, LaunchAlarm.class);
+        //intent.putExtra("alarmId",app.getAlarmList().get(0).getId());
+        PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Calendar futureDate = Calendar.getInstance();
+        futureDate.set(Calendar.SECOND, futureDate.get(Calendar.SECOND) + 1);
+
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
     }
 
     @Override
@@ -93,7 +111,7 @@ public class Home extends BaseActivity
                     app = (WeckerParameters) getApplicationContext();
 
                     ArrayList<Alarm> alarmList = app.getAlarmList();
-                    alarmList.remove(alarmId);
+                    removeAlarm(alarmList.remove(alarmId));
                     app.setAlarmList(alarmList);
 
                     setupAlarmLayout();
@@ -322,6 +340,23 @@ public class Home extends BaseActivity
         {
             Intent intent = new Intent(this, SetupPlaylist.class);
             startActivity(intent);
+        }
+    }
+
+    public void removeAlarm(Alarm alarm)
+    {
+        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, LaunchAlarm.class);
+        PendingIntent sender = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        try
+        {
+            alarmManager.cancel(sender);
+        }
+        catch (Exception e)
+        {
+            System.out.println("AlarmManager update was not canceled. " + e.toString());
         }
     }
 

@@ -21,14 +21,10 @@
             android:required="false" />
 
         <activity android:name=".Home">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
-        <activity android:name=".AlarmScreen" />
+        <activity
+            android:name=".AlarmScreen"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
         <activity android:name=".Deezer" />
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
@@ -49,6 +45,12 @@
         <activity
             android:name=".SetupAlarm"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
+        <activity android:name=".AlarmTesting"><intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <action android:name="android.intent.action.VIEW" />
+
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter></activity>
     </application>
 
 </manifest>

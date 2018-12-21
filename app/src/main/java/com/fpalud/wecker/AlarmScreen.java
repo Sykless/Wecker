@@ -3,11 +3,16 @@ package com.fpalud.wecker;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.deezer.sdk.model.Track;
 import com.deezer.sdk.network.connect.DeezerConnect;
@@ -78,6 +83,13 @@ public class AlarmScreen extends BaseActivity
 
     final String[] SUFFIX = {"mp3","wma","3gp","mp4","m4a","aac","flac","gsm","mkv","wav","ogg","ts"};  // use the suffix to filter
 
+    RelativeLayout relativeLayout;
+    ImageView validateImage;
+    Circle hideCircle;
+    CircleAngleAnimation animation;
+
+    int validateSize;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -90,7 +102,7 @@ public class AlarmScreen extends BaseActivity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         app = (WeckerParameters) getApplicationContext();
-
+/*
         for (Alarm alarm : app.getAlarmList())
         {
             if (alarm.getId() == getIntent().getIntExtra("alarmId",0))
@@ -98,12 +110,47 @@ public class AlarmScreen extends BaseActivity
                 idList = alarm.getIdSongsList();
                 break;
             }
-        }
+        }*/
+
+        validateImage = findViewById(R.id.validateImage);
+        // relativeLayout = findViewById(R.id.relativeLayout);
+
+        ViewTreeObserver vto = validateImage.getViewTreeObserver();
+        vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener()
+        {
+            public boolean onPreDraw()
+            {
+                validateImage.getViewTreeObserver().removeOnPreDrawListener(this);
+                validateSize = validateImage.getMeasuredHeight();
+
+                createCircle();
+
+                return true;
+            }
+        });
 
         if (idList.size() > 0)
         {
-            getTrackLists();
+            // getTrackLists();
         }
+    }
+
+    public void createCircle()
+    {
+        // Circle circle = new Circle(this, validateSize, , 360);
+        // relativeLayout.addView(circle, new RelativeLayout.LayoutParams(validateSize, validateSize));
+    }
+
+    public void hideCircle()
+    {
+        hideCircle = new Circle(this, validateSize, false);
+        relativeLayout.addView(hideCircle, new RelativeLayout.LayoutParams(validateSize, validateSize));
+
+        System.out.println(hideCircle.getAngle());
+
+        animation = new CircleAngleAnimation(hideCircle, 360);
+        animation.setDuration(1000);
+        hideCircle.startAnimation(animation);
     }
 
     public void clickPause(View view)

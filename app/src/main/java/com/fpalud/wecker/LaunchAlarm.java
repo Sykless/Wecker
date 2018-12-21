@@ -3,7 +3,6 @@ package com.fpalud.wecker;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.PowerManager;
 
 public class LaunchAlarm extends BroadcastReceiver
 {
@@ -12,6 +11,7 @@ public class LaunchAlarm extends BroadcastReceiver
     {
         Intent alarmIntent = new Intent(context, AlarmScreen.class);
         alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        alarmIntent.putExtra("alarmId",intent.getIntExtra("alarmId",0));
         context.startActivity(alarmIntent);
     }
 }
