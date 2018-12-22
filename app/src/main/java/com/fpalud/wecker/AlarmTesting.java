@@ -1,13 +1,17 @@
 package com.fpalud.wecker;
 
+import android.content.res.Resources;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import static android.view.View.GONE;
 
@@ -34,11 +38,22 @@ public class AlarmTesting extends BaseActivity
     Circle darkCircleSnooze;
     CircleAngleAnimation animationSnooze;
 
+    TextView snoozeValue;
+    ImageView plusButton;
+    ImageView minusButton;
+
+    AlphaAnimation buttonClick = new AlphaAnimation(1F, 0.7F); // Fading animation on image when clicked
+    AlphaAnimation buttonClickRelease = new AlphaAnimation(0.7F,1F); // Unfading animation on image when clicked
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wake_up_screen_layout);
+
+        System.out.println("Launching");
+
+        System.out.println();
 
         validateImage = findViewById(R.id.validateImage);
         musicImage = findViewById(R.id.musicImage);
@@ -47,6 +62,46 @@ public class AlarmTesting extends BaseActivity
         validateRelative = findViewById(R.id.validateRelative);
         musicRelative = findViewById(R.id.musicRelative);
         snoozeRelative = findViewById(R.id.snoozeRelative);
+
+        plusButton = findViewById(R.id.plusButton);
+        minusButton = findViewById(R.id.minusButton);
+        snoozeValue = findViewById(R.id.snoozeValue);
+
+        buttonClick.setDuration(100);
+        buttonClickRelease.setDuration(100);
+        buttonClickRelease.setStartOffset(100);
+
+        plusButton.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                v.startAnimation(buttonClick);
+                v.startAnimation(buttonClickRelease);
+
+                int minutes = Integer.valueOf(snoozeValue.getText().toString().substring(0, snoozeValue.getText().toString().length() - 4));
+
+                if (minutes < 60)
+                {
+                    snoozeValue.setText(String.valueOf(minutes + 5) + " min");
+                }
+            }
+        });
+
+        minusButton.setOnClickListener(new View.OnClickListener()
+        {
+            public void onClick(View v)
+            {
+                v.startAnimation(buttonClick);
+                v.startAnimation(buttonClickRelease);
+
+                int minutes = Integer.valueOf(snoozeValue.getText().toString().substring(0, snoozeValue.getText().toString().length() - 4));
+
+                if (minutes > 5)
+                {
+                    snoozeValue.setText(String.valueOf(minutes - 5) + " min");
+                }
+            }
+        });
 
         validateRelative.setOnTouchListener(new View.OnTouchListener()
         {
@@ -105,49 +160,23 @@ public class AlarmTesting extends BaseActivity
             }
         });
 
-        ViewTreeObserver vtoValidate = validateImage.getViewTreeObserver();
-        vtoValidate.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener()
-        {
-            public boolean onPreDraw()
+        snoozeImage.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout()
             {
-                validateImage.getViewTreeObserver().removeOnPreDrawListener(this);
-                validateSize = validateImage.getMeasuredWidth();
+                snoozeImage.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-                createValidateCircle();
-
-                return true;
-            }
-        });
-
-        ViewTreeObserver vtoMusic = musicImage.getViewTreeObserver();
-        vtoMusic.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener()
-        {
-            public boolean onPreDraw()
-            {
-                musicImage.getViewTreeObserver().removeOnPreDrawListener(this);
-                musicSize = musicImage.getMeasuredWidth();
-
-                System.out.println(musicSize);
+                snoozeSize = snoozeImage.getHeight();
+                musicSize = snoozeSize;
 
                 createMusicCircle();
-
-                return true;
-            }
-        });
-
-        ViewTreeObserver vtoSnooze = snoozeImage.getViewTreeObserver();
-        vtoSnooze.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener()
-        {
-            public boolean onPreDraw()
-            {
-                snoozeImage.getViewTreeObserver().removeOnPreDrawListener(this);
-                snoozeSize = snoozeImage.getMeasuredWidth();
-
                 createSnoozeCircle();
-
-                return true;
             }
         });
+
+        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+        validateSize = screenWidth / 2;
+        createValidateCircle();
     }
 
     public void createValidateCircle()

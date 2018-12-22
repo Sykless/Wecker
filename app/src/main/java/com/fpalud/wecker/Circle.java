@@ -22,7 +22,7 @@ public class Circle extends View {
         super(context);
 
         final int strokeWidth = isLittle ? 10 : 16;
-        System.out.println(strokeWidth);
+        System.out.println(size);
 
         paint = new Paint();
         paint.setAntiAlias(true);
@@ -31,7 +31,6 @@ public class Circle extends View {
         paint.setColor(ContextCompat.getColor(context, R.color.blueBackground));
 
         int realSize = size - strokeWidth/2;
-
         rect = new RectF(strokeWidth/2 - 1, strokeWidth/2 - 1, realSize + 1, realSize + 1);
 
         //Initial Angle (optional, it can be zero)
@@ -43,7 +42,7 @@ public class Circle extends View {
         super(context);
 
         final int strokeWidth = isLittle ? 8 : 14;
-        System.out.println(strokeWidth);
+        System.out.println(size);
 
         paint = new Paint();
         paint.setAntiAlias(true);
