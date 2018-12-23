@@ -69,7 +69,7 @@ public class Home extends BaseActivity
         PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar futureDate = Calendar.getInstance();
-        futureDate.set(Calendar.SECOND, futureDate.get(Calendar.SECOND) + 1);
+        futureDate.set(Calendar.SECOND, futureDate.get(Calendar.SECOND) + 5);
 
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
     }
@@ -208,6 +208,14 @@ public class Home extends BaseActivity
                         checkAnimations.get(alarmId).start();
 
                         alarm.setActive(false);
+
+                        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+                        Intent intent = new Intent(app, LaunchAlarm.class);
+                        intent.putExtra("alarmId",alarm.getId());
+                        PendingIntent sender = PendingIntent.getBroadcast(app, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                        alarmManager.cancel(sender);
                     }
                     else
                     {
@@ -232,6 +240,7 @@ public class Home extends BaseActivity
                         uncheckAnimations.get(alarmId).start();
 
                         alarm.setActive(true);
+                        SetupAlarm.setupAlarm(alarm, app);
                     }
 
                     alarmList.set(alarmId, alarm);

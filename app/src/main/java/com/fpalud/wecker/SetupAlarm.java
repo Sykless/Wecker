@@ -49,9 +49,6 @@ public class SetupAlarm extends BaseActivity
     ArrayList<Button> dayButtons = new ArrayList<>();
     ArrayList<Boolean> buttonClicked = new ArrayList<>(Arrays.asList(false, false, false, false, false, false, false));
 
-    int[] days = {7,6,0,1,2,3,4,5};
-    int[] endMonth = {31,28,31,30,31,30,31,31,30,31,30,31};
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -285,8 +282,9 @@ public class SetupAlarm extends BaseActivity
         alarm.setIdSongsList(idList);
         alarm.setVibration(vibrateBox.isChecked());
         alarm.setEmergencyAlarm(emergencyBox.isChecked());
+        alarm.setActive(true);
 
-        setupAlarm(alarm);
+        setupAlarm(alarm, this);
 
         app = (WeckerParameters) getApplicationContext();
 
@@ -356,7 +354,7 @@ public class SetupAlarm extends BaseActivity
 
     public void checkHours()
     {
-        if (Integer.valueOf(hours.getText().toString()) > 23 || Integer.valueOf(hours.getText().toString()) < 0)
+        if (hours.getText().toString().length() > 0 || Integer.valueOf(hours.getText().toString()) > 23 || Integer.valueOf(hours.getText().toString()) < 0)
         {
             hours.setText(String.valueOf("0"));
         }
@@ -364,6 +362,10 @@ public class SetupAlarm extends BaseActivity
 
     public void checkMinutes()
     {
+        if (minutes.getText().toString().length() == 0)
+        {
+            minutes.setText(String.valueOf("00"));
+        }
         if (minutes.getText().toString().length() == 1)
         {
             minutes.setText("0" + minutes.getText().toString());
@@ -389,9 +391,10 @@ public class SetupAlarm extends BaseActivity
         alert.show();
     }
 
-    public void setupAlarm(Alarm alarm)
+    public static void setupAlarm(Alarm alarm, Context context)
     {
-        removeAlarm(alarm);
+        int[] days = {7,6,0,1,2,3,4,5};
+        int[] endMonth = {31,28,31,30,31,30,31,31,30,31,30,31};
 
         Calendar futureDate = Calendar.getInstance();
         int originalHours = futureDate.get(Calendar.HOUR_OF_DAY);
@@ -479,11 +482,11 @@ public class SetupAlarm extends BaseActivity
             futureDate.set(Calendar.MONTH, wantedMonth);
             futureDate.set(Calendar.YEAR, wantedYear);
 
-            AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-            Intent intent = new Intent(this, LaunchAlarm.class);
+            Intent intent = new Intent(context, LaunchAlarm.class);
             intent.putExtra("alarmId",alarm.getId());
-            PendingIntent sender = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent sender = PendingIntent.getBroadcast(context, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
 
@@ -492,23 +495,6 @@ public class SetupAlarm extends BaseActivity
         else
         {
             System.out.println("No day selected");
-        }
-    }
-
-    public void removeAlarm(Alarm alarm)
-    {
-        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
-        Intent intent = new Intent(this, LaunchAlarm.class);
-        PendingIntent sender = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        try
-        {
-            alarmManager.cancel(sender);
-        }
-        catch (Exception e)
-        {
-            System.out.println("AlarmManager update was not canceled. " + e.toString());
         }
     }
 }

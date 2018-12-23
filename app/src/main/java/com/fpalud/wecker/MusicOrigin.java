@@ -437,8 +437,7 @@ public class MusicOrigin extends BaseActivity
 
         if (getIntent().getIntExtra("origin",PARAMS) == PARAMS)
         {
-            Intent intent = new Intent(this, Home.class);
-            startActivity(intent);
+            finish();
         }
         else
         {

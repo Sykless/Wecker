@@ -22,10 +22,6 @@ public class WeckerParameters  extends Application
     SpotifyAppRemote spotifyConnect;
     String musicFolderPath;
 
-    File selectedFolderMusic;
-    String selectedDeezerMusic;
-    String selectedSpotifyMusic;
-
     File emergencyTrack;
     ArrayList<Alarm> alarmList;
 
@@ -42,9 +38,6 @@ public class WeckerParameters  extends Application
         spotifyToken = sharedPrefs.getString("spotifyToken","");
         musicFolderPath = sharedPrefs.getString("musicFolderPath","");
         emergencyTrack = new File(sharedPrefs.getString("emergencyTrack",""));
-        selectedFolderMusic = new File(sharedPrefs.getString("selectedFolderMusic",""));
-        selectedDeezerMusic = sharedPrefs.getString("selectedDeezerMusic","");
-        selectedSpotifyMusic = sharedPrefs.getString("selectedSpotifyMusic","");
         deezerChecked = sharedPrefs.getBoolean("deezerChecked", false);
         spotifyChecked = sharedPrefs.getBoolean("spotifyChecked", false);
         folderChecked = sharedPrefs.getBoolean("folderChecked", false);
@@ -54,51 +47,6 @@ public class WeckerParameters  extends Application
         {
             alarmList = new ArrayList<>();
         }
-    }
-
-    public File getSelectedFolderMusic()
-    {
-        return selectedFolderMusic;
-    }
-
-    public void setSelectedFolderMusic(File selectedFolderMusic)
-    {
-        this.selectedFolderMusic = selectedFolderMusic;
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("selectedFolderMusic",selectedFolderMusic.getAbsolutePath());
-        editor.apply();
-    }
-
-    public String getSelectedDeezerMusic()
-    {
-        return selectedDeezerMusic;
-    }
-
-    public void setSelectedDeezerMusic(String selectedDeezerMusic)
-    {
-        this.selectedDeezerMusic = selectedDeezerMusic;
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("selectedDeezerMusic",selectedDeezerMusic);
-        editor.apply();
-    }
-
-    public String getSelectedSpotifyMusic()
-    {
-        return selectedSpotifyMusic;
-    }
-
-    public void setSelectedSpotifyMusic(String selectedSpotifyMusic)
-    {
-        this.selectedSpotifyMusic = selectedSpotifyMusic;
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("selectedSpotifyMusic",selectedSpotifyMusic);
-        editor.apply();
     }
 
     public File getEmergencyTrack()

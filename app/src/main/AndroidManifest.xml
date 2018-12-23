@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name=".WeckerParameters"
@@ -21,6 +22,12 @@
             android:required="false" />
 
         <activity android:name=".Home">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".AlarmScreen"
@@ -45,12 +52,8 @@
         <activity
             android:name=".SetupAlarm"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
-        <activity android:name=".AlarmTesting"><intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <action android:name="android.intent.action.VIEW" />
-
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter></activity>
+        <activity android:name=".AlarmTesting"/>
+        <activity android:name=".Connection"></activity>
     </application>
 
 </manifest>

@@ -11,7 +11,7 @@ public class LaunchAlarm extends BroadcastReceiver
     {
         Intent alarmIntent = new Intent(context, AlarmScreen.class);
         alarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        alarmIntent.putExtra("alarmId",intent.getIntExtra("alarmId",0));
+        alarmIntent.putExtra("alarmId",intent.getIntExtra("alarmId",-1));
         context.startActivity(alarmIntent);
     }
 }
