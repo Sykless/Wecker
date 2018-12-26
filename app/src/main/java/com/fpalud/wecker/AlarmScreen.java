@@ -46,6 +46,7 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.Empty;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
@@ -107,6 +108,9 @@ public class AlarmScreen extends BaseActivity
     boolean atLeastITriedSpotify = false;
     boolean atLeastITriedAPKSpotify = false;
     boolean spotifyConnectionChecked = false;
+    boolean changingSpotifySong = false;
+    boolean newSpotifyTrack = false;
+    int pauseNextSong = -5;
 
     String spotifyEndpoint;
     String spotifyOffset;
@@ -402,6 +406,8 @@ public class AlarmScreen extends BaseActivity
 
             try
             {
+                musicOrigin = FOLDER;
+
                 mediaPlayer.setDataSource(((File) musicList.toArray()[trackId]).getAbsolutePath());
                 mediaPlayer.prepare();
 
@@ -433,8 +439,6 @@ public class AlarmScreen extends BaseActivity
                 {
                     startAgain();
                 }
-
-                musicOrigin = FOLDER;
             }
             catch (Exception e)
             {
@@ -447,6 +451,8 @@ public class AlarmScreen extends BaseActivity
 
             try
             {
+                musicOrigin = DEEZER;
+
                 trackPlayer = new TrackPlayer(getApplication(), deezerConnect, new WifiAndMobileNetworkStateChecker());
                 trackPlayer.addOnPlayerStateChangeListener(new OnPlayerStateChangeListener() {
                     @Override
@@ -480,8 +486,6 @@ public class AlarmScreen extends BaseActivity
                 {
                     startAgain();
                 }
-
-                musicOrigin = DEEZER;
             }
             catch (Exception e)
             {
@@ -494,78 +498,26 @@ public class AlarmScreen extends BaseActivity
 
             try
             {
-                JSONObject track = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
+                musicOrigin = SPOTIFY;
 
-                System.out.println(((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
+                JSONObject jsonTrack = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
 
-                musicDuration = (int) track.get("duration_ms");
-                String artist = (((JSONArray) track.get("artists")).optJSONObject(0)).getString("name");
-                String title = track.getString("name");
+                String artist = (((JSONArray) jsonTrack.get("artists")).optJSONObject(0)).getString("name");
+                String title = jsonTrack.getString("name");
 
                 songName.setText(artist + " - " + title);
+                changingSpotifySong = false;
+                pauseNextSong = -10;
 
                 app = (WeckerParameters) getApplicationContext();
                 spotifyPlayer = app.getSpotifyConnect().getPlayerApi();
-                CallResult<Empty> playSong = spotifyPlayer.play("spotify:track:" + ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
+                spotifyPlayer.setRepeat(2); // Always repeat
+                CallResult<Empty> playSong = spotifyPlayer.play("spotify:track:" + jsonTrack.get("id"));
+
                 playSong.setResultCallback(new CallResult.ResultCallback<Empty>() {
                     @Override
                     public void onResult(Empty empty)
                     {
-                        new Handler().postDelayed(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                try
-                                {
-                                    System.out.println(spotifyTrackPlayed.name);
-
-                                    if (spotifyPlayerState != null)
-                                    {
-                                        System.out.println(spotifyPlayerState.isPaused);
-                                        System.out.println(spotifyPlayerState.track);
-                                        System.out.println(spotifyTrackPlayed);
-
-                                        if (!spotifyPlayerState.isPaused && spotifyPlayerState.track.name.equals(spotifyTrackPlayed.name))
-                                        {
-                                            spotifyPlayer.pause();
-                                            launchMusic(nextMusicOrigin);
-                                        }
-                                        else
-                                        {
-                                            System.out.println("User action : abort");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        System.out.println("NOULE");
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    System.out.println(e.getMessage());
-                                }
-                            }
-                        }, musicDuration - 100);
-
-                        new Handler().postDelayed(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                System.out.println("Getting player state");
-
-                                spotifyPlayer.getPlayerState().setResultCallback(new CallResult.ResultCallback<com.spotify.protocol.types.PlayerState>() {
-                                    @Override
-                                    public void onResult(final com.spotify.protocol.types.PlayerState playerState)
-                                    {
-                                        System.out.println("Got player state : " + playerState.isPaused);
-                                        spotifyPlayerState = playerState;
-                                    }
-                                });
-                            }
-                        }, musicDuration - 3000);
-
                         launchAlarm();
 
                         spotifyPlayer.getPlayerState().setResultCallback(new CallResult.ResultCallback<com.spotify.protocol.types.PlayerState>() {
@@ -574,17 +526,144 @@ public class AlarmScreen extends BaseActivity
                             {
                                 spotifyTrackPlayed = playerState.track;
                                 System.out.println(spotifyTrackPlayed.name);
+
+                                spotifyPlayer.subscribeToPlayerState().setEventCallback(new Subscription.EventCallback<com.spotify.protocol.types.PlayerState>()
+                                {
+                                    @Override
+                                    public void onEvent(com.spotify.protocol.types.PlayerState playerState)
+                                    {
+                                        System.out.println("PLAYER STATE");
+                                        System.out.println(playerState.playbackPosition + " - " + playerState.track);
+
+                                        if (pauseNextSong >= 0 && pauseNextSong < 5)
+                                        {
+                                            pauseNextSong++;
+                                            spotifyPlayer.pause();
+                                        }
+                                        else if (chillMode)
+                                        {
+                                            System.out.println("Entered");
+                                            System.out.println(newSpotifyTrack + " - " + !changingSpotifySong);
+
+                                            if (newSpotifyTrack) // Getting data for next track
+                                            {
+                                                System.out.println("Getting new data !");
+
+                                                newSpotifyTrack = false;
+                                                System.out.println("######################## " + newSpotifyTrack + " #############################");
+                                                spotifyPlayer.setRepeat(0);
+
+                                                try
+                                                {
+                                                    if (playerState.playbackPosition == 0)
+                                                    {
+                                                        System.out.println("Song hasn't started, reboot");
+
+                                                        newSpotifyTrack = true;
+                                                        spotifyPlayer.setRepeat(1);
+                                                    }
+                                                    else
+                                                    {
+                                                        spotifyTrackPlayed = playerState.track;
+                                                        spotifyPlayer.queue("spotify:track:" + ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
+
+                                                        System.out.println("Queue " + ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("name"));
+                                                    }
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    System.out.println(e.getMessage());
+                                                }
+                                            }
+
+                                            if (!changingSpotifySong)
+                                            {
+                                                if (playerState.playbackPosition < 500 && musicOrigin == SPOTIFY)
+                                                {
+                                                    try
+                                                    {
+                                                        System.out.println("Change");
+
+                                                        JSONObject jsonTrack = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
+
+                                                        String artist = (((JSONArray) jsonTrack.get("artists")).optJSONObject(0)).getString("name");
+                                                        String title = jsonTrack.getString("name");
+
+                                                        System.out.println("Current song : " + playerState.track.artist.name + " - " + playerState.track.name);
+                                                        System.out.println("Theorical song : " + spotifyTrackPlayed.artist.name + " - " + spotifyTrackPlayed.name);
+                                                        System.out.println("Next song : " + artist + " - " + title);
+
+                                                        if (playerState.track.name.equals(spotifyTrackPlayed.name)
+                                                                && playerState.track.artist.name.equals(spotifyTrackPlayed.artist.name)
+                                                                || artist.equals(playerState.track.artist.name)
+                                                                && title.equals(playerState.track.name))
+                                                        {
+                                                            System.out.println("Launch new music");
+                                                            System.out.println("Next music origin " + nextMusicOrigin);
+
+                                                            if (nextMusicOrigin == SPOTIFY)
+                                                            {
+                                                                System.out.println("New Spotify track");
+
+                                                                changingSpotifySong = true;
+
+                                                                new Handler().postDelayed(new Runnable() {
+                                                                    @Override
+                                                                    public void run()
+                                                                    {
+                                                                        changingSpotifySong = false;
+                                                                    }
+                                                                },1000);
+
+                                                                launchAlarm();
+                                                                startAgain();
+                                                            }
+                                                            else
+                                                            {
+                                                                System.out.println("New other track");
+
+                                                                pauseNextSong = 0;
+                                                                spotifyPlayer.pause();
+
+                                                                launchMusic(nextMusicOrigin);
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            System.out.println("User changed the music");
+                                                            spotifyPlayer.setRepeat(0);
+                                                        }
+                                                    }
+                                                    catch (Exception e)
+                                                    {
+                                                        System.out.println(e.getMessage());
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (musicOrigin != SPOTIFY)
+                                                    {
+                                                        System.out.println("Music does not come from Spotify");
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                spotifyTrackPlayed = playerState.track;
+                                                songName.setText(spotifyTrackPlayed.artist.name + " - " + spotifyTrackPlayed.name);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            spotifyTrackPlayed = playerState.track;
+                                            songName.setText(spotifyTrackPlayed.artist.name + " - " + spotifyTrackPlayed.name);
+                                        }
+                                    }
+                                });
                             }
                         });
-
-                        if (chillMode)
-                        {
-                            startAgain();
-                        }
                     }
                 });
-
-                musicOrigin = SPOTIFY;
             }
             catch (Exception e)
             {
@@ -1026,6 +1105,12 @@ public class AlarmScreen extends BaseActivity
                             else
                             {
                                 nextMusicOrigin = SPOTIFY;
+
+                                if (musicOrigin == SPOTIFY)
+                                {
+                                    spotifyPlayer.setRepeat(1);
+                                    newSpotifyTrack = true;
+                                }
                             }
                         }
                     }
