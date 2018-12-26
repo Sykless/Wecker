@@ -354,7 +354,7 @@ public class SetupAlarm extends BaseActivity
 
     public void checkHours()
     {
-        if (hours.getText().toString().length() > 0 || Integer.valueOf(hours.getText().toString()) > 23 || Integer.valueOf(hours.getText().toString()) < 0)
+        if (hours.getText().toString().length() == 0 || Integer.valueOf(hours.getText().toString()) > 23 || Integer.valueOf(hours.getText().toString()) < 0)
         {
             hours.setText(String.valueOf("0"));
         }

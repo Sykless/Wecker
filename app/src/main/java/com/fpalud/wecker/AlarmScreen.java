@@ -7,11 +7,13 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,10 +35,12 @@ import com.deezer.sdk.network.connect.SessionStore;
 import com.deezer.sdk.network.request.DeezerRequest;
 import com.deezer.sdk.network.request.event.JsonRequestListener;
 import com.deezer.sdk.network.request.event.RequestListener;
+import com.deezer.sdk.player.PlayerWrapper;
 import com.deezer.sdk.player.TrackPlayer;
 import com.deezer.sdk.player.event.OnPlayerStateChangeListener;
 import com.deezer.sdk.player.event.PlayerState;
 import com.deezer.sdk.player.networkcheck.WifiAndMobileNetworkStateChecker;
+import com.google.gson.JsonObject;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
@@ -64,6 +68,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
 
 import static android.view.View.GONE;
 import static com.deezer.sdk.player.event.PlayerState.PLAYBACK_COMPLETED;
@@ -74,12 +79,13 @@ public class AlarmScreen extends BaseActivity
     int trackId = 0;
     String selectedPlaylistID = "";
 
-    ArrayList<String> idList = new ArrayList<>();
     ArrayList<Integer> trackNumber = new ArrayList<>();
+    ArrayList<String> idList = new ArrayList<>();
     Collection<File> musicList;
 
     WeckerParameters app;
     DeezerConnect deezerConnect;
+    ConstraintLayout activityLayout;
 
     Alarm alarm;
     Vibrator vibrator;
@@ -88,16 +94,26 @@ public class AlarmScreen extends BaseActivity
     PlayerApi spotifyPlayer;
     MediaPlayer mediaPlayer;
 
+    com.spotify.protocol.types.PlayerState spotifyPlayerState = null;
+    com.spotify.protocol.types.Track spotifyTrackPlayed;//
+
     int alarmId = 0;
     int id = 0;
     int offset = 0;
     int musicOrigin;
+    int nextMusicOrigin;
     int musicDuration = 0;
 
     boolean atLeastITriedSpotify = false;
     boolean atLeastITriedAPKSpotify = false;
     boolean spotifyConnectionChecked = false;
-    boolean spotifyAPKConnected = false;
+
+    String spotifyEndpoint;
+    String spotifyOffset;
+
+    boolean chillMode = false;
+    JSONArray trackJSONList;
+    Track deezerTrack;
 
     private static final int REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "wecker://callback";
@@ -129,13 +145,14 @@ public class AlarmScreen extends BaseActivity
     Circle darkCircleSnooze;
     CircleAngleAnimation animationSnooze;
 
+    TextView songName;
     TextView snoozeValue;
     ImageView plusButton;
     ImageView minusButton;
 
-    boolean pressingValidate = true;
-    boolean pressingSnooze = true;
-    boolean pressingMusic = true;
+    boolean pressingValidate = false;
+    boolean pressingSnooze = false;
+    boolean pressingMusic = false;
 
     AlphaAnimation buttonClick = new AlphaAnimation(1F, 0.7F); // Fading animation on image when clicked
     AlphaAnimation buttonClickRelease = new AlphaAnimation(0.7F,1F); // Unfading animation on image when clicked
@@ -145,6 +162,13 @@ public class AlarmScreen extends BaseActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wake_up_screen_layout);
+
+        activityLayout = findViewById(R.id.activityLayout);
+
+        for (int i = 0 ; i < activityLayout.getChildCount() ; i++)
+        {
+            activityLayout.getChildAt(i).setVisibility(View.INVISIBLE);
+        }
 
         app = (WeckerParameters) getApplicationContext();
 
@@ -156,6 +180,7 @@ public class AlarmScreen extends BaseActivity
         musicRelative = findViewById(R.id.musicRelative);
         snoozeRelative = findViewById(R.id.snoozeRelative);
 
+        songName = findViewById(R.id.songName);
         plusButton = findViewById(R.id.plusButton);
         minusButton = findViewById(R.id.minusButton);
         snoozeValue = findViewById(R.id.snoozeValue);
@@ -286,17 +311,17 @@ public class AlarmScreen extends BaseActivity
         validateSize = screenWidth / 2;
         createValidateCircle();
 
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         int sb2value = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value, 0);
+
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         alarmId = getIntent().getIntExtra("alarmId",-1);
 
         if (alarmId != -1)
         {
-            /*for (Alarm a : app.getAlarmList())
+            for (Alarm a : app.getAlarmList())
             {
                 if (a.getId() == alarmId)
                 {
@@ -304,9 +329,9 @@ public class AlarmScreen extends BaseActivity
                     idList = a.getIdSongsList();
                     break;
                 }
-            }*/
+            }
 
-            idList = app.getAlarmList().get(0).getIdSongsList();
+            idList = alarm.getIdSongsList();
 
             if (idList.size() > 0)
             {
@@ -315,6 +340,8 @@ public class AlarmScreen extends BaseActivity
         }
         else // DO NOT KEEP THAT : TESTING ONLY
         {
+            System.out.println("TESTING");
+
             alarmId = 0;
             alarm = app.getAlarmList().get(0);
             idList = alarm.getIdSongsList();
@@ -328,21 +355,36 @@ public class AlarmScreen extends BaseActivity
 
     public void launchAlarm()
     {
-        pressingValidate = false;
-        pressingSnooze = false;
-        pressingMusic = false;
+        for (int i = 0 ; i < activityLayout.getChildCount() ; i++)
+        {
+            activityLayout.getChildAt(i).setVisibility(View.VISIBLE);
+        }
 
         if (alarm.isVibration())
         {
-            long[] pattern = {0, 2000, 1000}; // delay - duration - number of times
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            if (chillMode)
             {
-                vibrator.vibrate(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                {
+                    vibrator.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE));
+                }
+                else
+                {
+                    vibrator.vibrate(2000);
+                }
             }
             else
             {
-                vibrator.vibrate(pattern, 0);
+                long[] pattern = {0, 2000, 1000}; // delay - duration - number of times
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                {
+                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE));
+                }
+                else
+                {
+                    vibrator.vibrate(pattern, 0);
+                }
             }
         }
 
@@ -350,6 +392,205 @@ public class AlarmScreen extends BaseActivity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+    }
+
+    public void launchMusic(int origin)
+    {
+        if (origin == FOLDER)
+        {
+            mediaPlayer = new MediaPlayer();
+
+            try
+            {
+                mediaPlayer.setDataSource(((File) musicList.toArray()[trackId]).getAbsolutePath());
+                mediaPlayer.prepare();
+
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    public void onCompletion(MediaPlayer mp)
+                    {
+                        System.out.println("Ouiiii");
+
+                        mediaPlayer.stop();
+                        mediaPlayer.release();
+
+                        if (chillMode)
+                        {
+                            launchMusic(nextMusicOrigin);
+                        }
+                        else
+                        {
+                            launchMusic(FOLDER);
+                        }
+                    }
+                });
+
+                songName.setText(((File) musicList.toArray()[trackId]).getName());
+
+                launchAlarm();
+                mediaPlayer.start();
+
+                if (chillMode)
+                {
+                    startAgain();
+                }
+
+                musicOrigin = FOLDER;
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        else if (origin == DEEZER)
+        {
+            System.out.println("ORIGIN DEEZER");
+
+            try
+            {
+                trackPlayer = new TrackPlayer(getApplication(), deezerConnect, new WifiAndMobileNetworkStateChecker());
+                trackPlayer.addOnPlayerStateChangeListener(new OnPlayerStateChangeListener() {
+                    @Override
+                    public void onPlayerStateChange(PlayerState playerState, long l)
+                    {
+                        if (playerState == PLAYBACK_COMPLETED)
+                        {
+                            trackPlayer.stop();
+                            trackPlayer.release();
+
+                            if (chillMode)
+                            {
+                                launchMusic(nextMusicOrigin);
+                            }
+                            else
+                            {
+                                launchMusic(DEEZER);
+                            }
+                        }
+                    }
+                });
+
+                songName.setText(deezerTrack.getArtist().getName() + " - " + deezerTrack.getTitle());
+
+                System.out.println("Track for Deezer chosen");
+
+                launchAlarm();
+                trackPlayer.playTrack(deezerTrack.getId());
+
+                if (chillMode)
+                {
+                    startAgain();
+                }
+
+                musicOrigin = DEEZER;
+            }
+            catch (Exception e)
+            {
+                System.out.println(e.getMessage());
+            }
+        }
+        else if (origin == SPOTIFY)
+        {
+            System.out.println("ORIGIN SPOTIFY");
+
+            try
+            {
+                JSONObject track = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
+
+                System.out.println(((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
+
+                musicDuration = (int) track.get("duration_ms");
+                String artist = (((JSONArray) track.get("artists")).optJSONObject(0)).getString("name");
+                String title = track.getString("name");
+
+                songName.setText(artist + " - " + title);
+
+                app = (WeckerParameters) getApplicationContext();
+                spotifyPlayer = app.getSpotifyConnect().getPlayerApi();
+                CallResult<Empty> playSong = spotifyPlayer.play("spotify:track:" + ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
+                playSong.setResultCallback(new CallResult.ResultCallback<Empty>() {
+                    @Override
+                    public void onResult(Empty empty)
+                    {
+                        new Handler().postDelayed(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    System.out.println(spotifyTrackPlayed.name);
+
+                                    if (spotifyPlayerState != null)
+                                    {
+                                        System.out.println(spotifyPlayerState.isPaused);
+                                        System.out.println(spotifyPlayerState.track);
+                                        System.out.println(spotifyTrackPlayed);
+
+                                        if (!spotifyPlayerState.isPaused && spotifyPlayerState.track.name.equals(spotifyTrackPlayed.name))
+                                        {
+                                            spotifyPlayer.pause();
+                                            launchMusic(nextMusicOrigin);
+                                        }
+                                        else
+                                        {
+                                            System.out.println("User action : abort");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        System.out.println("NOULE");
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    System.out.println(e.getMessage());
+                                }
+                            }
+                        }, musicDuration - 100);
+
+                        new Handler().postDelayed(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                System.out.println("Getting player state");
+
+                                spotifyPlayer.getPlayerState().setResultCallback(new CallResult.ResultCallback<com.spotify.protocol.types.PlayerState>() {
+                                    @Override
+                                    public void onResult(final com.spotify.protocol.types.PlayerState playerState)
+                                    {
+                                        System.out.println("Got player state : " + playerState.isPaused);
+                                        spotifyPlayerState = playerState;
+                                    }
+                                });
+                            }
+                        }, musicDuration - 3000);
+
+                        launchAlarm();
+
+                        spotifyPlayer.getPlayerState().setResultCallback(new CallResult.ResultCallback<com.spotify.protocol.types.PlayerState>() {
+                            @Override
+                            public void onResult(final com.spotify.protocol.types.PlayerState playerState)
+                            {
+                                spotifyTrackPlayed = playerState.track;
+                                System.out.println(spotifyTrackPlayed.name);
+                            }
+                        });
+
+                        if (chillMode)
+                        {
+                            startAgain();
+                        }
+                    }
+                });
+
+                musicOrigin = SPOTIFY;
+            }
+            catch (Exception e)
+            {
+                System.out.println(e.getMessage());
+            }
+        }
     }
 
     public void cancelMusic(boolean snooze)
@@ -372,7 +613,7 @@ public class AlarmScreen extends BaseActivity
         }
         else
         {
-            SetupAlarm.setupAlarm(app.getAlarmList().get(alarmId), this);
+            SetupAlarm.setupAlarm(alarm, this);
         }
 
         if (musicOrigin == DEEZER)
@@ -383,7 +624,6 @@ public class AlarmScreen extends BaseActivity
         else if (musicOrigin == SPOTIFY)
         {
             spotifyPlayer.pause();
-            SpotifyAppRemote.disconnect(app.getSpotifyConnect());
         }
         else if (musicOrigin == FOLDER)
         {
@@ -392,14 +632,31 @@ public class AlarmScreen extends BaseActivity
 
         vibrator.cancel();
 
+        app = (WeckerParameters) getApplicationContext();
+        if (app.getSpotifyConnect() != null && app.getSpotifyConnect().isConnected())
+        {
+            SpotifyAppRemote.disconnect(app.getSpotifyConnect());
+        }
+
         finish();
         moveTaskToBack(true);
+    }
+
+    public void startAgain()
+    {
+        trackNumber = new ArrayList<>();
+        offset = 0;
+        id = 0;
+
+        getTrackLists();
     }
 
     public void getTrackLists()
     {
         app = (WeckerParameters) getApplicationContext();
         String playlistId = idList.get(id);
+
+        System.out.println("Starting again");
 
         if ("folderMusic".equals(playlistId)) // Music folder
         {
@@ -445,7 +702,12 @@ public class AlarmScreen extends BaseActivity
         {
             System.out.println("Trying Spotify");
 
-            if (!spotifyAPKConnected)
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+
+            if (app.getSpotifyConnect() == null || !app.getSpotifyConnect().isConnected())
             {
                 System.out.println("Connected null");
 
@@ -557,29 +819,13 @@ public class AlarmScreen extends BaseActivity
 
             if ("folderMusic".equals(selectedPlaylistID))
             {
-                mediaPlayer = new MediaPlayer();
-
-                try
+                if (!chillMode)
                 {
-                    mediaPlayer.setDataSource(((File) musicList.toArray()[trackId]).getAbsolutePath());
-                    mediaPlayer.prepare();
-                    mediaPlayer.setLooping(true);
-
-                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        public void onCompletion(MediaPlayer mp)
-                        {
-                            System.out.println("Finished");
-                        }
-                    });
-
-                    launchAlarm();
-                    mediaPlayer.start();
-
-                    musicOrigin = FOLDER;
+                    launchMusic(FOLDER);
                 }
-                catch (Exception e)
+                else
                 {
-                    e.printStackTrace();
+                    nextMusicOrigin = FOLDER;
                 }
             }
             else if (selectedPlaylistID.length() <= 10)
@@ -589,31 +835,15 @@ public class AlarmScreen extends BaseActivity
                     public void onResult(Object result, Object requestId)
                     {
                         List<Track> trackList = (List<Track>) result;
+                        deezerTrack = trackList.get(trackId);
 
-                        try
+                        if (!chillMode)
                         {
-                            trackPlayer = new TrackPlayer(getApplication(), deezerConnect, new WifiAndMobileNetworkStateChecker());
-                            trackPlayer.addOnPlayerStateChangeListener(new OnPlayerStateChangeListener() {
-                                @Override
-                                public void onPlayerStateChange(PlayerState playerState, long l)
-                                {
-                                    System.out.println(playerState + " " + l);
-
-                                    if (playerState == PLAYBACK_COMPLETED)
-                                    {
-                                        System.out.println("Song finished");
-                                    }
-                                }
-                            });
-
-                            launchAlarm();
-                            trackPlayer.playTrack(trackList.get(trackId).getId());
-
-                            musicOrigin = DEEZER;
+                            launchMusic(DEEZER);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            System.out.println(e.getMessage());
+                            nextMusicOrigin = DEEZER;
                         }
                     }
 
@@ -637,6 +867,8 @@ public class AlarmScreen extends BaseActivity
                         trackId -= 50;
                         offset += 50;
                     }
+
+                    System.out.println("Offset ? " +  offset);
 
                     new SpotifyCrawler().execute("me/tracks",Integer.toString(offset));
                 }
@@ -670,10 +902,17 @@ public class AlarmScreen extends BaseActivity
                 app = (WeckerParameters) getApplicationContext();
 
                 endpoint = strings[0];
+                spotifyEndpoint = endpoint;
+
                 if (strings.length > 1)
                 {
                     offset = strings[1];
+                    spotifyOffset = offset;
                     offsetNull = false;
+                }
+                else
+                {
+                    spotifyOffset = null;
                 }
 
                 if ("me/tracks".equals(endpoint))
@@ -717,6 +956,11 @@ public class AlarmScreen extends BaseActivity
                 if (server_response.length() == 0)
                 {
                     System.out.println("Spotify not connected");
+
+                    if (chillMode)
+                    {
+                        spotifyConnect();
+                    }
                 }
                 else if (offsetNull)
                 {
@@ -771,54 +1015,18 @@ public class AlarmScreen extends BaseActivity
                     {
                         System.out.println("Launching music");
 
-                        final JSONArray trackJSONList = (JSONArray) server_response.get("items");
+                        trackJSONList = (JSONArray) server_response.get("items");
 
                         if (trackJSONList != null)
                         {
-                            System.out.println(((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
-
-                            musicDuration = (int) ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("duration_ms");
-
-                            app = (WeckerParameters) getApplicationContext();
-                            spotifyPlayer = app.getSpotifyConnect().getPlayerApi();
-                            CallResult<Empty> playSong = spotifyPlayer.play("spotify:track:" + ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
-
-                            CallResult<com.spotify.protocol.types.PlayerState> state = spotifyPlayer.getPlayerState();
-
-                            playSong.setResultCallback(new CallResult.ResultCallback<Empty>() {
-                                @Override
-                                public void onResult(Empty empty)
-                                {
-                                    new Handler().postDelayed(new Runnable()
-                                    {
-                                        @Override
-                                        public void run()
-                                        {
-                                            launchAlarm();
-
-                                            try
-                                            {
-                                                Toast.makeText(app, "Pause", Toast.LENGTH_SHORT).show();
-                                                spotifyPlayer.pause();
-                                                // spotifyPlayer.play("spotify:track:" + ((JSONObject) trackJSONList.optJSONObject(trackId).get("track")).get("id"));
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                System.out.println(e.getMessage());
-                                            }
-                                        }
-                                    }, musicDuration);
-                                }
-                            });
-
-                            /*state.setResultCallback(new CallResult.ResultCallback<com.spotify.protocol.types.PlayerState>() {
-                                @Override
-                                public void onResult(com.spotify.protocol.types.PlayerState playerState) {
-                                        playerState.
-                                }
-                            });*/
-
-                            musicOrigin = SPOTIFY;
+                            if (!chillMode)
+                            {
+                                launchMusic(SPOTIFY);
+                            }
+                            else
+                            {
+                                nextMusicOrigin = SPOTIFY;
+                            }
                         }
                     }
                     catch (Exception e)
@@ -919,7 +1127,21 @@ public class AlarmScreen extends BaseActivity
 
                 spotifyConnectionChecked = true;
 
-                getTrackLists();
+                if (chillMode)
+                {
+                    if (spotifyOffset == null)
+                    {
+                        new SpotifyCrawler().execute(spotifyEndpoint);
+                    }
+                    else
+                    {
+                        new SpotifyCrawler().execute(spotifyEndpoint, spotifyOffset);
+                    }
+                }
+                else
+                {
+                    getTrackLists();
+                }
             }
             else
             {
@@ -946,7 +1168,6 @@ public class AlarmScreen extends BaseActivity
                     public void onConnected(SpotifyAppRemote spotifyAppRemote)
                     {
                         app.setSpotifyConnect(spotifyAppRemote);
-                        spotifyAPKConnected = true;
                         getTrackLists();
                     }
 
@@ -1047,7 +1268,15 @@ public class AlarmScreen extends BaseActivity
             @Override
             public void onAnimationEnd(Animation arg0)
             {
-                // if (pressingMusic) whiteCircle.setVisibility(GONE);
+                if (pressingMusic && !chillMode)
+                {
+                    vibrator.cancel();
+                    chillMode = true;
+                    startAgain();
+                    whiteCircleMusic.setVisibility(GONE);
+                    musicImage.setColorFilter(getColor(R.color.blue));
+                    // songName.setTextColor(getColor(R.color.blue));
+                }
             }
         });
 

@@ -28,6 +28,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.spotify.protocol.client.CallResult;
+
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
@@ -69,9 +71,9 @@ public class Home extends BaseActivity
         PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar futureDate = Calendar.getInstance();
-        futureDate.set(Calendar.SECOND, futureDate.get(Calendar.SECOND) + 5);
+        futureDate.set(Calendar.SECOND, futureDate.get(Calendar.SECOND) + 1);
 
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
+        // alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
     }
 
     @Override
@@ -84,6 +86,8 @@ public class Home extends BaseActivity
     public void setupAlarmLayout()
     {
         mainLayout.removeAllViews();
+        checkAnimations = new ArrayList<>();
+        uncheckAnimations = new ArrayList<>();
 
         for (int alarmIndex = 0 ; alarmIndex < alarmList.size() ; alarmIndex++)
         {
