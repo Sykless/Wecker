@@ -539,6 +539,8 @@ public class AlarmScreen extends BaseActivity
                                         {
                                             pauseNextSong++;
                                             spotifyPlayer.pause();
+
+                                            System.out.println("PAUSEUH");
                                         }
                                         else if (chillMode)
                                         {
@@ -582,56 +584,33 @@ public class AlarmScreen extends BaseActivity
                                                 {
                                                     try
                                                     {
-                                                        System.out.println("Change");
+                                                        System.out.println("Next music origin " + nextMusicOrigin);
 
-                                                        JSONObject jsonTrack = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
-
-                                                        String artist = (((JSONArray) jsonTrack.get("artists")).optJSONObject(0)).getString("name");
-                                                        String title = jsonTrack.getString("name");
-
-                                                        System.out.println("Current song : " + playerState.track.artist.name + " - " + playerState.track.name);
-                                                        System.out.println("Theorical song : " + spotifyTrackPlayed.artist.name + " - " + spotifyTrackPlayed.name);
-                                                        System.out.println("Next song : " + artist + " - " + title);
-
-                                                        if (playerState.track.name.equals(spotifyTrackPlayed.name)
-                                                                && playerState.track.artist.name.equals(spotifyTrackPlayed.artist.name)
-                                                                || artist.equals(playerState.track.artist.name)
-                                                                && title.equals(playerState.track.name))
+                                                        if (nextMusicOrigin == SPOTIFY)
                                                         {
-                                                            System.out.println("Launch new music");
-                                                            System.out.println("Next music origin " + nextMusicOrigin);
+                                                            System.out.println("New Spotify track");
 
-                                                            if (nextMusicOrigin == SPOTIFY)
-                                                            {
-                                                                System.out.println("New Spotify track");
+                                                            changingSpotifySong = true;
 
-                                                                changingSpotifySong = true;
+                                                            new Handler().postDelayed(new Runnable() {
+                                                                @Override
+                                                                public void run()
+                                                                {
+                                                                    changingSpotifySong = false;
+                                                                }
+                                                            },1000);
 
-                                                                new Handler().postDelayed(new Runnable() {
-                                                                    @Override
-                                                                    public void run()
-                                                                    {
-                                                                        changingSpotifySong = false;
-                                                                    }
-                                                                },1000);
-
-                                                                launchAlarm();
-                                                                startAgain();
-                                                            }
-                                                            else
-                                                            {
-                                                                System.out.println("New other track");
-
-                                                                pauseNextSong = 0;
-                                                                spotifyPlayer.pause();
-
-                                                                launchMusic(nextMusicOrigin);
-                                                            }
+                                                            launchAlarm();
+                                                            startAgain();
                                                         }
                                                         else
                                                         {
-                                                            System.out.println("User changed the music");
-                                                            spotifyPlayer.setRepeat(0);
+                                                            System.out.println("New other track");
+
+                                                            pauseNextSong = 0;
+                                                            spotifyPlayer.pause();
+
+                                                            launchMusic(nextMusicOrigin);
                                                         }
                                                     }
                                                     catch (Exception e)
@@ -644,6 +623,12 @@ public class AlarmScreen extends BaseActivity
                                                     if (musicOrigin != SPOTIFY)
                                                     {
                                                         System.out.println("Music does not come from Spotify");
+
+                                                        if (pauseNextSong < 5)
+                                                        {
+                                                            pauseNextSong = 0;
+                                                            spotifyPlayer.pause();
+                                                        }
                                                     }
                                                 }
                                             }
