@@ -3,17 +3,13 @@ package com.fpalud.wecker;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
-import com.deezer.sdk.model.Track;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
+
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import java.io.File;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class WeckerParameters  extends Application
@@ -22,7 +18,7 @@ public class WeckerParameters  extends Application
     SpotifyAppRemote spotifyConnect;
     String musicFolderPath;
 
-    File emergencyTrack;
+    File defaultTrack;
     ArrayList<Alarm> alarmList;
 
     boolean deezerChecked;
@@ -37,7 +33,11 @@ public class WeckerParameters  extends Application
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         spotifyToken = sharedPrefs.getString("spotifyToken","");
         musicFolderPath = sharedPrefs.getString("musicFolderPath","");
-        emergencyTrack = new File(sharedPrefs.getString("emergencyTrack",""));
+        //System.out.println(musicFolderPath);
+        setDefaultTrack(new File( musicFolderPath + "/3 Naivety.mp3"));
+        //System.out.println(getDefaultTrack().getName());
+        //defaultTrack = new File(sharedPrefs.getString("defaultTrack",""));
+        defaultTrack = new File(sharedPrefs.getString("defaultTrack",""));
         deezerChecked = sharedPrefs.getBoolean("deezerChecked", false);
         spotifyChecked = sharedPrefs.getBoolean("spotifyChecked", false);
         folderChecked = sharedPrefs.getBoolean("folderChecked", false);
@@ -49,18 +49,18 @@ public class WeckerParameters  extends Application
         }
     }
 
-    public File getEmergencyTrack()
+    public File getDefaultTrack()
     {
-        return emergencyTrack;
+        return defaultTrack;
     }
 
-    public void setEmergencyTrack(File emergencyTrack)
+    public void setDefaultTrack(File defaultTrack)
     {
-        this.emergencyTrack = emergencyTrack;
+        this.defaultTrack = defaultTrack;
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putString("emergencyTrack",emergencyTrack.getAbsolutePath());
+        editor.putString("defaultTrack",defaultTrack.getAbsolutePath());
         editor.apply();
     }
 

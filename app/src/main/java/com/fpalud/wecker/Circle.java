@@ -23,6 +23,8 @@ public class Circle extends View {
 
         final int strokeWidth = isLittle ? 10 : 16;
 
+        System.out.println("Draw circle");
+
         paint = new Paint();
         paint.setAntiAlias(true);
         paint.setStyle(Paint.Style.STROKE);
@@ -41,6 +43,8 @@ public class Circle extends View {
         super(context);
 
         final int strokeWidth = isLittle ? 8 : 14;
+
+        System.out.println("Draw circle");
 
         paint = new Paint();
         paint.setAntiAlias(true);
