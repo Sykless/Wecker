@@ -220,16 +220,33 @@
             app:fontFamily="@font/carter_one" />
     </LinearLayout>
 
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/volumeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="25dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <SeekBar
+            android:id="@android:id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical" />
+
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/vibrateLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="25dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="8dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+        app:layout_constraintTop_toBottomOf="@+id/volumeLayout">
 
         <LinearLayout
             android:id="@+id/vibrateCheckBox"
@@ -251,9 +268,9 @@
             android:id="@+id/vibrationText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Vibration"
             android:clickable="true"
             android:focusable="true"
+            android:text="Vibrations"
             android:textColor="@color/white"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />
@@ -313,6 +330,27 @@
             android:textColor="@color/blue"
             android:textSize="16dp" />
 
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/emergencyTimerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/emergencyLayout">
+
+        <TextView
+            android:id="@+id/emergencytText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="8dp"
+            android:text="Se déclenche après"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:fontFamily="@font/carter_one" />
     </RelativeLayout>
 
     <Button
