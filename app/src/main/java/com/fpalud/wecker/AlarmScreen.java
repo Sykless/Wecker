@@ -108,7 +108,6 @@ public class AlarmScreen extends BaseActivity
     boolean changingSpotifySong = false;
     boolean newSpotifyTrack = false;
     boolean newDefaultAlarm = true;
-    boolean layoutInvisible = true;
     int pauseNextSong = -5;
 
     String spotifyEndpoint;
@@ -328,7 +327,15 @@ public class AlarmScreen extends BaseActivity
                 timeHandler.postDelayed(this, 1000);
 
                 Calendar date = Calendar.getInstance();
-                currentTime.setText(date.get(Calendar.HOUR_OF_DAY) + ":" + date.get(Calendar.MINUTE));
+                if (date.get(Calendar.MINUTE) < 10)
+                {
+                    currentTime.setText(date.get(Calendar.HOUR_OF_DAY) + ":0" + date.get(Calendar.MINUTE));
+                }
+                else
+                {
+                    currentTime.setText(date.get(Calendar.HOUR_OF_DAY) + ":" + date.get(Calendar.MINUTE));
+                }
+
             }
         });
 
@@ -393,20 +400,22 @@ public class AlarmScreen extends BaseActivity
 
         System.out.println("Get flags");
 
-        if (layoutInvisible)
+        runOnUiThread(new Runnable()
         {
-            layoutInvisible = false;
-
-            for (int i = 0 ; i < activityLayout.getChildCount() ; i++)
+            @Override
+            public void run()
             {
-                activityLayout.getChildAt(i).setVisibility(View.VISIBLE);
-            }
+                for (int i = 0 ; i < activityLayout.getChildCount() ; i++)
+                {
+                    activityLayout.getChildAt(i).setVisibility(View.VISIBLE);
+                }
 
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-        }
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            }
+        });
 
         System.out.println("Got flags");
     }
@@ -1507,74 +1516,105 @@ public class AlarmScreen extends BaseActivity
 
         if (newDefaultAlarm)
         {
-            newDefaultAlarm = false;
+            try
+            {
+                newDefaultAlarm = false;
 
-            if (trackPlayer != null)
-            {
-                trackPlayer.stop();
-                trackPlayer.release();
-            }
+                System.out.println("Enter default alarm");
 
-            if (spotifyPlayer != null)
-            {
-                spotifyPlayer.pause();
-            }
+                if (trackPlayer != null)
+                {
+                    System.out.println("Deezer");
+                    trackPlayer.stop();
+                    trackPlayer.release();
+                    System.out.println("Deezer ok");
+                }
 
-            if (mediaPlayer != null)
-            {
-                mediaPlayer.stop();
-            }
+                System.out.println("Checkpoint");
 
-            app = (WeckerParameters) getApplicationContext();
-            if (app.getSpotifyConnect() != null && app.getSpotifyConnect().isConnected())
-            {
-                SpotifyAppRemote.disconnect(app.getSpotifyConnect());
-            }
+                if (spotifyPlayer != null)
+                {
+                    System.out.println("Spotify");
+                    spotifyPlayer.pause();
+                    System.out.println("Spotify ok");
+                }
 
-            if (app.getDefaultTrack() == null)
-            {
-                // Play a naze track
-                System.out.println("Null");
-            }
-            else
-            {
+                System.out.println("Checkpoint");
+
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
+                {
+                    System.out.println("Folder");
+                    mediaPlayer.stop();
+                    System.out.println("Folder ok");
+                }
+
+                System.out.println("Playeds ended");
+
+                app = (WeckerParameters) getApplicationContext();
+                if (app.getSpotifyConnect() != null && app.getSpotifyConnect().isConnected())
+                {
+                    SpotifyAppRemote.disconnect(app.getSpotifyConnect());
+                }
+
                 System.out.println(app.getDefaultTrack().getAbsolutePath());
+
+                System.out.println("Disconnect + defaultTrack path");
 
                 try
                 {
                     mediaPlayer = new MediaPlayer();
                     mediaPlayer.setDataSource(app.getDefaultTrack().getAbsolutePath());
                     mediaPlayer.prepare();
+
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            songName.setText(app.getDefaultTrack().getName());
+                        }
+                    });
                 }
                 catch (Exception e)
                 {
                     System.out.println(e.getMessage());
-                    int resID = getResources().getIdentifier("deja_vu", "raw", getPackageName());
-                    mediaPlayer = MediaPlayer.create(app, resID);
+                    mediaPlayer = MediaPlayer.create(app, getResources().getIdentifier("deja_vu", "raw", getPackageName()));
+
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            songName.setText("Déjà vu");
+                        }
+                    });
                 }
 
+                System.out.println("A priori là ça marche");
                 System.out.println("Default alarm launched");
 
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     public void onCompletion(MediaPlayer mp)
                     {
                         mediaPlayer.stop();
-                        mediaPlayer.release();
+
+                        System.out.println("Reboot ");
 
                         newDefaultAlarm = true;
                         defaultAlarm();
                     }
                 });
 
-
                 launchAlarm();
+                System.out.println("Post launch alarm");
                 chillMode = true;
                 mediaPlayer.start();
 
                 System.out.println("Default alarm launched");
-
-
-
+            }
+            catch (Exception e)
+            {
+                System.out.println(e.getMessage());
             }
         }
     }

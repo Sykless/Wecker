@@ -45,8 +45,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:max="10"
-                android:progress="5"
-                android:thumb="@drawable/thumb_size" />
+                android:progress="5" />
         </FrameLayout>
 
     </LinearLayout>
@@ -91,6 +90,7 @@
                 android:background="@drawable/round_button"
                 android:backgroundTint="@color/white"
                 android:gravity="center"
+                android:onClick="musicFolderInstructions"
                 android:text="?"
                 android:textColor="@color/blue"
                 android:textSize="16sp" />
@@ -162,6 +162,7 @@
                 android:background="@drawable/round_button"
                 android:backgroundTint="@color/white"
                 android:gravity="center"
+                android:onClick="defaultAlarmInstructions"
                 android:text="?"
                 android:textColor="@color/blue"
                 android:textSize="16sp" />
@@ -230,6 +231,7 @@
                 android:background="@drawable/round_button"
                 android:backgroundTint="@color/white"
                 android:gravity="center"
+                android:onClick="musicModeExplanations"
                 android:text="?"
                 android:textColor="@color/blue"
                 android:textSize="16sp" />

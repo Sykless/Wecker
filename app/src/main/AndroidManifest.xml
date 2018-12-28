@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".WeckerParameters"
@@ -33,6 +34,7 @@
             android:name=".AlarmScreen"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
         <activity android:name=".Deezer" />
+
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
@@ -52,9 +54,16 @@
         <activity
             android:name=".SetupAlarm"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
+
         <activity android:name=".AlarmTesting" />
         <activity android:name=".Connection" />
-        <activity android:name=".Settings"></activity>
+        <activity android:name=".Settings"/>
+
+        <receiver android:name="ProgramAlarm">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

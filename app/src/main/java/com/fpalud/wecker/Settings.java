@@ -1,11 +1,16 @@
 package com.fpalud.wecker;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -69,22 +74,24 @@ public class Settings extends BaseActivity
 
         app = (WeckerParameters) getApplicationContext();
 
+        System.out.println(app.getDefaultTrack().getName());
+
         try
         {
-            defaultLocation.setText(app.getDefaultTrack().getName());
-
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setDataSource(app.getDefaultTrack().getAbsolutePath());
             mediaPlayer.prepare();
+
+            defaultLocation.setText(app.getDefaultTrack().getName());
         }
         catch (Exception e)
         {
-            mediaPlayer = MediaPlayer.create(this, getResources().getIdentifier("deja_vu", "raw", getPackageName()));
+            // mediaPlayer = MediaPlayer.create(this, getResources().getIdentifier("deja_vu", "raw", getPackageName()));
         }
 
         vibrationChillMode.setChecked(app.isVibrationChillMode());
 
-        mediaPlayer.setLooping(true);
+        // mediaPlayer.setLooping(true);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         maxVolume = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
 
@@ -96,13 +103,13 @@ public class Settings extends BaseActivity
             @Override
             public void onStopTrackingTouch(SeekBar seekBar)
             {
-                mediaPlayer.pause();
+                //mediaPlayer.pause();
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar)
             {
-                mediaPlayer.start();
+                //mediaPlayer.start();
             }
 
             @Override
@@ -148,11 +155,11 @@ public class Settings extends BaseActivity
                         }
                         catch (Exception e)
                         {
-                            int resID = getResources().getIdentifier("deja_vu", "raw", getPackageName());
-                            mediaPlayer = MediaPlayer.create(app, resID);
+                            //int resID = getResources().getIdentifier("deja_vu", "raw", getPackageName());
+                            //mediaPlayer = MediaPlayer.create(app, resID);
                         }
 
-                        mediaPlayer.setLooping(true);
+                        //mediaPlayer.setLooping(true);
                     }
                 }
             }
@@ -169,18 +176,25 @@ public class Settings extends BaseActivity
                 view.startAnimation(buttonClick);
                 view.startAnimation(buttonClickRelease);
 
-                isFolderLocation = true;
-
-                if (app.getMusicFolderPath().length() > 0)
+                if (!isReadPermissionEnabled())
                 {
-                    fileListerDialog.setDefaultDir(app.getMusicFolderPath());
+                    requestPermission();
                 }
                 else
                 {
-                    fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
-                }
+                    isFolderLocation = true;
 
-                fileListerDialog.show();
+                    if (app.getMusicFolderPath().length() > 0)
+                    {
+                        fileListerDialog.setDefaultDir(app.getMusicFolderPath());
+                    }
+                    else
+                    {
+                        fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
+                    }
+
+                    fileListerDialog.show();
+                }
             }
         });
 
@@ -192,22 +206,30 @@ public class Settings extends BaseActivity
                 view.startAnimation(buttonClick);
                 view.startAnimation(buttonClickRelease);
 
-                isFolderLocation = false;
-
-                if (app.getDefaultTrack() != null)
+                if (!isReadPermissionEnabled())
                 {
-                    fileListerDialog.setDefaultDir(app.getDefaultTrack().getParent());
-                }
-                else if (app.getMusicFolderPath().length() > 0)
-                {
-                    fileListerDialog.setDefaultDir(app.getMusicFolderPath());
+                    requestPermission();
                 }
                 else
                 {
-                    fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
+                    isFolderLocation = false;
+
+                    if (app.getDefaultTrack().length() > 0)
+                    {
+                        fileListerDialog.setDefaultDir(app.getDefaultTrack().getParent());
+                    }
+                    else if (app.getMusicFolderPath().length() > 0)
+                    {
+                        fileListerDialog.setDefaultDir(app.getMusicFolderPath());
+                    }
+                    else
+                    {
+                        fileListerDialog.setDefaultDir(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getParentFile().getAbsolutePath());
+                    }
+
+                    fileListerDialog.show();
                 }
 
-                fileListerDialog.show();
             }
         });
 
@@ -267,9 +289,60 @@ public class Settings extends BaseActivity
         finish();
     }
 
-    public boolean isFile(String path)
+    public void musicFolderInstructions(View view)
     {
-        String[] parts = path.split("/");
-        return parts[parts.length - 1].contains(".");
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setMessage("Dossier musique\n\n"+
+                "Contient toutes les musiques lues par l'alarme.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int id) {}
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    public void defaultAlarmInstructions(View view)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setMessage("Alarme par défaut\n\n"+
+                "Se lance à la place de l'alarme classique lorsqu'un problème survient.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int id) {}
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    public void musicModeExplanations(View view)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setMessage("Mode Musique\n\n"+
+                "Permet de faire défiler des musiques aléatoires en se réveillant.\n\n" +
+                "Une vibration peut survenir entre chaque musique pour garantir le réveil.")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int id) {}
+                });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    public boolean isReadPermissionEnabled()
+    {
+        String requiredPermission = "android.permission.READ_EXTERNAL_STORAGE";
+        return (getApplicationContext().checkCallingOrSelfPermission(requiredPermission) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    public void requestPermission()
+    {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
     }
 }
