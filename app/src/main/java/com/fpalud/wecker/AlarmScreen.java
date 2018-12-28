@@ -74,6 +74,7 @@ public class AlarmScreen extends BaseActivity
 {
     int trackId = 0;
     String selectedPlaylistID = "";
+    String selectedTrackID = "";
 
     ArrayList<Integer> trackNumber = new ArrayList<>();
     ArrayList<String> idList = new ArrayList<>();
@@ -115,6 +116,7 @@ public class AlarmScreen extends BaseActivity
 
     boolean chillMode = false;
     JSONArray trackJSONList;
+    JSONObject jsonTrack;
     Track deezerTrack;
 
     private static final int REQUEST_CODE = 1337;
@@ -430,9 +432,19 @@ public class AlarmScreen extends BaseActivity
             {
                 musicOrigin = FOLDER;
 
-                System.out.println(((File) musicList.toArray()[trackId]).getAbsolutePath());
+                if (alarm.isRandomSong())
+                {
+                    System.out.println(((File) musicList.toArray()[trackId]).getAbsolutePath());
+                    mediaPlayer.setDataSource(((File) musicList.toArray()[trackId]).getAbsolutePath());
+                    songName.setText(((File) musicList.toArray()[trackId]).getName());
+                }
+                else
+                {
+                    System.out.println(alarm.getSelectedSong().getAbsolutePath());
+                    mediaPlayer.setDataSource(alarm.getSelectedSong().getAbsolutePath());
+                    songName.setText(alarm.getSelectedSong().getName());
+                }
 
-                mediaPlayer.setDataSource(((File) musicList.toArray()[trackId]).getAbsolutePath());
                 mediaPlayer.prepare();
 
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -453,8 +465,6 @@ public class AlarmScreen extends BaseActivity
                         }
                     }
                 });
-
-                songName.setText(((File) musicList.toArray()[trackId]).getName());
 
                 launchAlarm();
                 mediaPlayer.start();
@@ -535,7 +545,10 @@ public class AlarmScreen extends BaseActivity
             {
                 musicOrigin = SPOTIFY;
 
-                JSONObject jsonTrack = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
+                if (alarm.isRandomSong())
+                {
+                    jsonTrack = (JSONObject) trackJSONList.optJSONObject(trackId).get("track");
+                }
 
                 String artist = (((JSONArray) jsonTrack.get("artists")).optJSONObject(0)).getString("name");
                 String title = jsonTrack.getString("name");
@@ -961,114 +974,151 @@ public class AlarmScreen extends BaseActivity
         else
         {
             System.out.println(trackNumber);
-            ArrayList<Integer> trackThreasholds = new ArrayList<>(trackNumber);
 
-            for (int i = trackThreasholds.size() - 1 ; i >= 0 ; i--)
+            if (alarm.isRandomSong())
             {
-                int sum = 0;
+                ArrayList<Integer> trackThreasholds = new ArrayList<>(trackNumber);
 
-                for (int j = i ; j >= 0 ; j--)
+                for (int i = trackThreasholds.size() - 1 ; i >= 0 ; i--)
                 {
-                    sum += trackThreasholds.get(j);
+                    int sum = 0;
+
+                    for (int j = i ; j >= 0 ; j--)
+                    {
+                        sum += trackThreasholds.get(j);
+                    }
+
+                    trackThreasholds.set(i,sum);
                 }
 
-                trackThreasholds.set(i,sum);
-            }
+                int randomId = new Random().nextInt((trackThreasholds.get(trackThreasholds.size() - 1)));
 
-            int randomId = new Random().nextInt((trackThreasholds.get(trackThreasholds.size() - 1)));
+                System.out.println(trackThreasholds);
+                System.out.println("Random id : " + randomId);
 
-            System.out.println(trackThreasholds);
-            System.out.println("Random id : " + randomId);
-
-            for (int i = 0 ; i < trackThreasholds.size() ; i++)
-            {
-                if (trackThreasholds.get(i) > randomId)
+                for (int i = 0 ; i < trackThreasholds.size() ; i++)
                 {
-                    selectedPlaylistID = idList.get(i);
-
-                    if (i == 0)
+                    if (trackThreasholds.get(i) > randomId)
                     {
-                        trackId = randomId;
+                        selectedPlaylistID = idList.get(i);
+
+                        if (i == 0)
+                        {
+                            trackId = randomId;
+                        }
+                        else
+                        {
+                            trackId = randomId - trackThreasholds.get(i - 1);
+                        }
+
+                        break;
+                    }
+                }
+
+                System.out.println(selectedPlaylistID);
+                System.out.println(trackId);
+
+                if ("folderMusic".equals(selectedPlaylistID))
+                {
+                    if (!chillMode)
+                    {
+                        launchMusic(FOLDER);
                     }
                     else
                     {
-                        trackId = randomId - trackThreasholds.get(i - 1);
+                        nextMusicOrigin = FOLDER;
                     }
+                }
+                else if (selectedPlaylistID.length() <= 10)
+                {
+                    RequestListener listener = new JsonRequestListener()
+                    {
+                        public void onResult(Object result, Object requestId)
+                        {
+                            List<Track> trackList = (List<Track>) result;
+                            deezerTrack = trackList.get(trackId);
 
-                    break;
+                            if (!chillMode)
+                            {
+                                launchMusic(DEEZER);
+                            }
+                            else
+                            {
+                                nextMusicOrigin = DEEZER;
+                            }
+                        }
+
+                        public void onUnparsedResult(String requestResponse, Object requestId) {defaultAlarm();}
+                        public void onException(Exception e, Object requestId) {defaultAlarm();}
+                    };
+
+                    Bundle bundle = new Bundle(1);
+                    bundle.putString("limit","2000");
+                    DeezerRequest request = new DeezerRequest("playlist/" + selectedPlaylistID + "/tracks", bundle);
+                    deezerConnect.requestAsync(request, listener);
+                }
+                else
+                {
+                    System.out.println("SYSTEM LAUNCHING");
+
+                    if ("spotifyLovedSongs".equals(selectedPlaylistID))
+                    {
+                        while (trackId >= 50)
+                        {
+                            trackId -= 50;
+                            offset += 50;
+                        }
+
+                        System.out.println("Offset ? " +  offset);
+
+                        new SpotifyCrawler().execute("me/tracks",Integer.toString(offset));
+                    }
+                    else
+                    {
+                        while (trackId >= 100)
+                        {
+                            trackId -= 100;
+                            offset += 100;
+                        }
+
+                        new SpotifyCrawler().execute("playlists/" + selectedPlaylistID + "/tracks",Integer.toString(offset));
+                    }
+                }
+            }
+            else
+            {
+                selectedTrackID = alarm.getSelectedSongId();
+
+                if (selectedTrackID == null)
+                {
+                    launchMusic(FOLDER);
+                }
+                else if (selectedTrackID.length() <= 10)
+                {
+                    RequestListener listener = new JsonRequestListener()
+                    {
+                        public void onResult(Object result, Object requestId)
+                        {
+                            deezerTrack = (Track) result;
+                            launchMusic(DEEZER);
+                        }
+
+                        public void onUnparsedResult(String requestResponse, Object requestId) {defaultAlarm();}
+                        public void onException(Exception e, Object requestId) {defaultAlarm();}
+                    };
+
+                    Bundle bundle = new Bundle(1);
+                    bundle.putString("limit","1");
+                    DeezerRequest request = new DeezerRequest("track/" + selectedTrackID, bundle);
+                    deezerConnect.requestAsync(request, listener);
+                }
+                else
+                {
+                    new SpotifyCrawler().execute("tracks/" + selectedTrackID, "single");
                 }
             }
 
             app = (WeckerParameters) getApplicationContext();
-            System.out.println(selectedPlaylistID);
-            System.out.println(trackId);
-
-            if ("folderMusic".equals(selectedPlaylistID))
-            {
-                if (!chillMode)
-                {
-                    launchMusic(FOLDER);
-                }
-                else
-                {
-                    nextMusicOrigin = FOLDER;
-                }
-            }
-            else if (selectedPlaylistID.length() <= 10)
-            {
-                RequestListener listener = new JsonRequestListener()
-                {
-                    public void onResult(Object result, Object requestId)
-                    {
-                        List<Track> trackList = (List<Track>) result;
-                        deezerTrack = trackList.get(trackId);
-
-                        if (!chillMode)
-                        {
-                            launchMusic(DEEZER);
-                        }
-                        else
-                        {
-                            nextMusicOrigin = DEEZER;
-                        }
-                    }
-
-                    public void onUnparsedResult(String requestResponse, Object requestId) {defaultAlarm();}
-                    public void onException(Exception e, Object requestId) {defaultAlarm();}
-                };
-
-                Bundle bundle = new Bundle(1);
-                bundle.putString("limit","2000");
-                DeezerRequest request = new DeezerRequest("playlist/" + selectedPlaylistID + "/tracks", bundle);
-                deezerConnect.requestAsync(request, listener);
-            }
-            else
-            {
-                System.out.println("SYSTEM LAUNCHING");
-
-                if ("spotifyLovedSongs".equals(selectedPlaylistID))
-                {
-                    while (trackId >= 50)
-                    {
-                        trackId -= 50;
-                        offset += 50;
-                    }
-
-                    System.out.println("Offset ? " +  offset);
-
-                    new SpotifyCrawler().execute("me/tracks",Integer.toString(offset));
-                }
-                else
-                {
-                    while (trackId >= 100)
-                    {
-                        trackId -= 100;
-                        offset += 100;
-                    }
-
-                    new SpotifyCrawler().execute("playlists/" + selectedPlaylistID + "/tracks",Integer.toString(offset));
-                }
-            }
         }
     }
 
@@ -1079,6 +1129,7 @@ public class AlarmScreen extends BaseActivity
         String offset = "0";
         String limit = "100";
         boolean offsetNull = true;
+        boolean singleTrack = false;
 
         @Override
         protected String doInBackground(String... strings)
@@ -1093,6 +1144,12 @@ public class AlarmScreen extends BaseActivity
                 if (strings.length > 1)
                 {
                     offset = strings[1];
+
+                    if ("single".equals(offset))
+                    {
+                        singleTrack = true;
+                    }
+
                     spotifyOffset = offset;
                     offsetNull = false;
                 }
@@ -1147,6 +1204,11 @@ public class AlarmScreen extends BaseActivity
                     {
                         spotifyConnect();
                     }
+                }
+                else if (singleTrack)
+                {
+                    jsonTrack = server_response;
+                    launchMusic(SPOTIFY);
                 }
                 else if (offsetNull)
                 {
@@ -1461,7 +1523,7 @@ public class AlarmScreen extends BaseActivity
             @Override
             public void onAnimationEnd(Animation arg0)
             {
-                if (pressingMusic && !chillMode)
+                if (pressingMusic && !chillMode && alarm.isRandomSong())
                 {
                     vibrator.cancel();
                     chillMode = true;

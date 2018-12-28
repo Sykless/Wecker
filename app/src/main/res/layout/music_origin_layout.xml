@@ -8,7 +8,7 @@
     tools:context="com.fpalud.wecker.MusicOrigin">
 
     <TextView
-        android:id="@+id/textReadFrom"
+        android:id="@+id/playlistName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Lire la musique depuis :"
@@ -30,7 +30,7 @@
         app:layout_constraintBottom_toTopOf="@+id/spotifyLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textReadFrom">
+        app:layout_constraintTop_toBottomOf="@id/playlistName">
 
         <LinearLayout
             android:id="@+id/deezerCheckBox"

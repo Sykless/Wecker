@@ -54,7 +54,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
 
@@ -88,7 +90,6 @@ public class SetupPlaylist extends BaseActivity
     int folderPlaylistnumber = 0;
     int totalPlaylistnumber = 0;
 
-    boolean spotifyConnected = false;
     boolean spotifyConnectionChecked = false;
 
     private static final int REQUEST_CODE = 1337;
@@ -105,7 +106,7 @@ public class SetupPlaylist extends BaseActivity
     ArrayList<String> spotifyPlaylistNameList = new ArrayList<>();
     ArrayList<String> idList = new ArrayList<>();
     ArrayList<String> newIdList = new ArrayList<>();
-    ArrayList<String> oldIdList = new ArrayList<>();
+    Map<String, String> playlistsName = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -127,6 +128,18 @@ public class SetupPlaylist extends BaseActivity
         determinedPlaylistText = findViewById(R.id.determinedPlaylistText);
 
         playlistLayout = findViewById(R.id.playlistLayout);
+
+        fromAlarm = getIntent().getBooleanExtra("fromAlarm",false);
+
+        if (fromAlarm)
+        {
+            alarmId = getIntent().getIntExtra("alarmId",0);
+
+            currentAlarm = app.getAlarmList().get(alarmId);
+            idList = (ArrayList<String>) currentAlarm.getIdSongsList().clone();
+            playlistSwitch.setChecked(!currentAlarm.isRandomPlaylist());
+            songSwitch.setChecked(!currentAlarm.isRandomSong());
+        }
 
         songSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
@@ -153,16 +166,6 @@ public class SetupPlaylist extends BaseActivity
                 }
             }
         });
-
-        fromAlarm = getIntent().getBooleanExtra("fromAlarm",false);
-
-        if (fromAlarm)
-        {
-            alarmId = getIntent().getIntExtra("alarmId",0);
-
-            currentAlarm = app.getAlarmList().get(alarmId);
-            idList = (ArrayList<String>) currentAlarm.getIdSongsList().clone();
-        }
 
         connectionSetup(INIT);
     }
@@ -217,19 +220,42 @@ public class SetupPlaylist extends BaseActivity
                     System.out.println(idList);
 
                     currentAlarm.setIdSongsList(idList);
+                    currentAlarm.setRandomPlaylist(!playlistSwitch.isChecked());
+                    currentAlarm.setRandomSong(!songSwitch.isChecked());
 
                     ArrayList<Alarm> alarmList = app.getAlarmList();
                     alarmList.set(alarmId, currentAlarm);
                     app.setAlarmList(alarmList);
 
+                    if (songSwitch.isChecked()) // Determined
+                    {
+                        Intent intent = new Intent(this, SetupSongs.class);
+                        intent.putExtra("alarmId",alarmId);
+                        intent.putExtra("playlistId", idList.get(0));
+                        intent.putExtra("playlistName", playlistsName.get(idList.get(0)));
+                        startActivity(intent);
+                    }
+
                     finish();
                 }
                 else
                 {
-                    Intent intent = new Intent(this, SetupAlarm.class);
-                    intent.putExtra("randomSong", !songSwitch.isChecked());
-                    intent.putStringArrayListExtra("idList", idList);
-                    startActivity(intent);
+                    if (!songSwitch.isChecked()) // Random
+                    {
+                        Intent intent = new Intent(this, SetupAlarm.class);
+                        intent.putStringArrayListExtra("idList", idList);
+                        intent.putExtra("randomPlaylist",!playlistSwitch.isChecked());
+                        intent.putExtra("randomSong",true);
+
+                        startActivity(intent);
+                    }
+                    else
+                    {
+                        Intent intent = new Intent(this, SetupSongs.class);
+                        intent.putExtra("playlistId", idList.get(0));
+                        intent.putExtra("playlistName", playlistsName.get(idList.get(0)));
+                        startActivity(intent);
+                    }
                 }
 
                 break;
@@ -301,8 +327,6 @@ public class SetupPlaylist extends BaseActivity
                 }
             }
         }
-
-
     }
 
     public void getDeezerPlaylists()
@@ -451,7 +475,6 @@ public class SetupPlaylist extends BaseActivity
 
     public void displaySpotifyPlaylists()
     {
-        System.out.println("Top");
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable()
         {
@@ -739,9 +762,14 @@ public class SetupPlaylist extends BaseActivity
             newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.deezerColor)));
             checkBox.setId(deezerPlaylistnumber);
+            playlistsName.put(String.valueOf(deezerCorrectPlaylistList.get(deezerPlaylistnumber).getId()),playlistName);
+
+            System.out.println(fromAlarm);
 
             if (fromAlarm)
             {
+                System.out.println(idList);
+
                 if (idList.contains(String.valueOf(deezerCorrectPlaylistList.get(deezerPlaylistnumber).getId())))
                 {
                     System.out.println("Contains");
@@ -767,6 +795,7 @@ public class SetupPlaylist extends BaseActivity
             newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.spotifyColor)));
             checkBox.setId(spotifyPlaylistnumber - 1);
+            playlistsName.put(spotifyPlaylistList.get(spotifyPlaylistnumber - 1),playlistName);
 
             if (fromAlarm)
             {
@@ -795,6 +824,8 @@ public class SetupPlaylist extends BaseActivity
             newButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.folderColor)));
             CompoundButtonCompat.setButtonTintList(checkBox, ColorStateList.valueOf(getResources().getColor(R.color.folderColor)));
             checkBox.setId(folderPlaylistnumber - 1);
+            playlistsName.put("folderMusic", playlistName);
+
             folderPlaylistnumber++;
 
             if (fromAlarm)

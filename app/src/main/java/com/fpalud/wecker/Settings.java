@@ -36,10 +36,6 @@ public class Settings extends BaseActivity
     LinearLayout folderlayout;
     LinearLayout defaultLayout;
 
-    Button folderExplanation;
-    Button defaultExplanation;
-    Button musicExplanation;
-
     CheckBox vibrationChillMode;
     TextView vibrationText;
 

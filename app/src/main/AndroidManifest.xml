@@ -34,7 +34,6 @@
             android:name=".AlarmScreen"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
         <activity android:name=".Deezer" />
-
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
@@ -54,16 +53,17 @@
         <activity
             android:name=".SetupAlarm"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
-
         <activity android:name=".AlarmTesting" />
         <activity android:name=".Connection" />
-        <activity android:name=".Settings"/>
+        <activity android:name=".Settings" />
 
-        <receiver android:name="ProgramAlarm">
+        <receiver android:name=".ProgramAlarm">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".SetupSongs"></activity>
     </application>
 
 </manifest>

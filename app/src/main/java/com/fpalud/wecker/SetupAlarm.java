@@ -17,6 +17,7 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.nio.file.WatchKey;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +73,18 @@ public class SetupAlarm extends BaseActivity
         else
         {
             alarm = new Alarm();
+
+            File selectedSong = null;
+
+            if (intent.getStringExtra("selectedMusicPath") != null)
+            {
+                selectedSong = new File(intent.getStringExtra("selectedMusicPath"));
+            }
+
+            alarm.setSelectedSong(selectedSong);
+            alarm.setSelectedSongId(intent.getStringExtra("selectedMusicId"));
+            alarm.setRandomSong(intent.getBooleanExtra("randomSong",false));
+            alarm.setRandomPlaylist(intent.getBooleanExtra("randomPlaylist",false));
             idList = intent.getStringArrayListExtra("idList");
 
             setContentView(R.layout.setup_alarm_layout);

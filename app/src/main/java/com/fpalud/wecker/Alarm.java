@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -12,11 +13,19 @@ public class Alarm
 {
     int hours;
     int minutes;
+
     ArrayList<Boolean> days = new ArrayList<>();
     ArrayList<String> idSongsList = new ArrayList<>();
+
+    boolean active;
     boolean vibration;
     boolean emergencyAlarm;
-    boolean active;
+    boolean randomPlaylist;
+    boolean randomSong;
+
+    File selectedSong = null;
+    String selectedSongId = null;
+
     int id;
 
     Alarm()
@@ -25,15 +34,21 @@ public class Alarm
         id = (int) System.currentTimeMillis();
     }
 
-    Alarm(int hours, int minutes, ArrayList<Boolean> days, ArrayList<String> idSongsList, boolean vibration, boolean emergencyAlarm)
+    Alarm(int hours, int minutes, ArrayList<Boolean> days, ArrayList<String> idSongsList,
+          boolean vibration, boolean emergencyAlarm, boolean randomPlaylist, boolean randomSong)
     {
         setHours(hours);
         setMinutes(minutes);
         setDays(days);
+
         setIdSongsList(idSongsList);
+
+        setActive(true);
         setVibration(vibration);
         setEmergencyAlarm(emergencyAlarm);
-        setActive(true);
+        setRandomPlaylist(randomPlaylist);
+        setRandomSong(randomSong);
+
         id = (int) System.currentTimeMillis();
     }
 
@@ -98,6 +113,34 @@ public class Alarm
     public void setEmergencyAlarm(boolean emergencyAlarm)
     {
         this.emergencyAlarm = emergencyAlarm;
+    }
+
+    public boolean isRandomPlaylist() {
+        return randomPlaylist;
+    }
+    public void setRandomPlaylist(boolean randomPlaylist) {
+        this.randomPlaylist = randomPlaylist;
+    }
+
+    public boolean isRandomSong() {
+        return randomSong;
+    }
+    public void setRandomSong(boolean randomSong) {
+        this.randomSong = randomSong;
+    }
+
+    public File getSelectedSong() {
+        return selectedSong;
+    }
+    public void setSelectedSong(File selectedSong) {
+        this.selectedSong = selectedSong;
+    }
+
+    public String getSelectedSongId() {
+        return selectedSongId;
+    }
+    public void setSelectedSongId(String selectedSongId) {
+        this.selectedSongId = selectedSongId;
     }
 
     public int getId()
