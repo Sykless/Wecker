@@ -90,6 +90,9 @@ public class AlarmScreen extends BaseActivity
     PlayerApi spotifyPlayer;
     MediaPlayer mediaPlayer;
 
+    Handler timeHandler;
+    TextView currentTime;
+
     com.spotify.protocol.types.Track spotifyTrackPlayed;
 
     int alarmId = 0;
@@ -184,6 +187,8 @@ public class AlarmScreen extends BaseActivity
         plusButton = findViewById(R.id.plusButton);
         minusButton = findViewById(R.id.minusButton);
         snoozeValue = findViewById(R.id.snoozeValue);
+
+        currentTime = findViewById(R.id.currentTime);
 
         buttonClick.setDuration(100);
         buttonClickRelease.setDuration(100);
@@ -312,8 +317,20 @@ public class AlarmScreen extends BaseActivity
         createValidateCircle();
 
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        int sb2value = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value, 0);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, app.getAlarmVolume(), 0);
+
+        timeHandler = new Handler();
+        timeHandler.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                timeHandler.postDelayed(this, 1000);
+
+                Calendar date = Calendar.getInstance();
+                currentTime.setText(date.get(Calendar.HOUR_OF_DAY) + ":" + date.get(Calendar.MINUTE));
+            }
+        });
 
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -344,9 +361,11 @@ public class AlarmScreen extends BaseActivity
     {
         System.out.println("launch alarm");
 
-        if (alarm.isVibration())
+        app = (WeckerParameters) getApplicationContext();
+
+        if (chillMode)
         {
-            if (chillMode)
+            if (app.isVibrationChillMode())
             {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 {
@@ -357,18 +376,18 @@ public class AlarmScreen extends BaseActivity
                     vibrator.vibrate(2000);
                 }
             }
+        }
+        else if (alarm.isVibration())
+        {
+            long[] pattern = {0, 2000, 1000}; // delay - duration - number of times
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            {
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE));
+            }
             else
             {
-                long[] pattern = {0, 2000, 1000}; // delay - duration - number of times
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                {
-                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, VibrationEffect.DEFAULT_AMPLITUDE));
-                }
-                else
-                {
-                    vibrator.vibrate(pattern, 0);
-                }
+                vibrator.vibrate(pattern, 0);
             }
         }
 
@@ -1520,37 +1539,42 @@ public class AlarmScreen extends BaseActivity
             else
             {
                 System.out.println(app.getDefaultTrack().getAbsolutePath());
-                mediaPlayer = new MediaPlayer();
 
                 try
                 {
+                    mediaPlayer = new MediaPlayer();
                     mediaPlayer.setDataSource(app.getDefaultTrack().getAbsolutePath());
                     mediaPlayer.prepare();
-
-                    System.out.println("Default alarm launched");
-
-                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        public void onCompletion(MediaPlayer mp)
-                        {
-                            mediaPlayer.stop();
-                            mediaPlayer.release();
-
-                            newDefaultAlarm = true;
-                            defaultAlarm();
-                        }
-                    });
-
-
-                    launchAlarm();
-                    chillMode = true;
-                    mediaPlayer.start();
-
-                    System.out.println("Default alarm launched");
                 }
                 catch (Exception e)
                 {
                     System.out.println(e.getMessage());
+                    int resID = getResources().getIdentifier("deja_vu", "raw", getPackageName());
+                    mediaPlayer = MediaPlayer.create(app, resID);
                 }
+
+                System.out.println("Default alarm launched");
+
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    public void onCompletion(MediaPlayer mp)
+                    {
+                        mediaPlayer.stop();
+                        mediaPlayer.release();
+
+                        newDefaultAlarm = true;
+                        defaultAlarm();
+                    }
+                });
+
+
+                launchAlarm();
+                chillMode = true;
+                mediaPlayer.start();
+
+                System.out.println("Default alarm launched");
+
+
+
             }
         }
     }

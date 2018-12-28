@@ -10,7 +10,7 @@
     tools:context=".AlarmScreen">
 
     <TextView
-        android:id="@+id/hour"
+        android:id="@+id/currentTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
@@ -36,7 +36,7 @@
         app:layout_constraintBottom_toTopOf="@+id/imagesLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/hour">
+        app:layout_constraintTop_toBottomOf="@+id/currentTime">
 
         <View
             android:layout_width="0dp"
@@ -155,7 +155,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="8"
                 android:fontFamily="@font/carter_one"
-                android:text="Bring me the Horizon - Go to Hell for Heaven's Sake"
                 android:textAlignment="center"
                 android:textAllCaps="false"
                 android:textColor="@color/white"

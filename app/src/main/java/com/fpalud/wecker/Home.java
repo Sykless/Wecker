@@ -334,8 +334,7 @@ public class Home extends BaseActivity
 
     public void goToParams(View view)
     {
-        Intent intent = new Intent(this, MusicOrigin.class);
-        intent.putExtra("origin",PARAMS);
+        Intent intent = new Intent(this, Settings.class);
         startActivity(intent);
     }
 

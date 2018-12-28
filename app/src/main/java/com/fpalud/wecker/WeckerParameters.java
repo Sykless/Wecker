@@ -24,6 +24,9 @@ public class WeckerParameters  extends Application
     boolean deezerChecked;
     boolean spotifyChecked;
     boolean folderChecked;
+    boolean vibrationChillMode;
+
+    int alarmVolume;
 
     @Override
     public void onCreate()
@@ -33,14 +36,12 @@ public class WeckerParameters  extends Application
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         spotifyToken = sharedPrefs.getString("spotifyToken","");
         musicFolderPath = sharedPrefs.getString("musicFolderPath","");
-        //System.out.println(musicFolderPath);
-        setDefaultTrack(new File( musicFolderPath + "/3 Naivety.mp3"));
-        //System.out.println(getDefaultTrack().getName());
-        //defaultTrack = new File(sharedPrefs.getString("defaultTrack",""));
+        alarmVolume = sharedPrefs.getInt("alarmVolume",5);
         defaultTrack = new File(sharedPrefs.getString("defaultTrack",""));
         deezerChecked = sharedPrefs.getBoolean("deezerChecked", false);
         spotifyChecked = sharedPrefs.getBoolean("spotifyChecked", false);
         folderChecked = sharedPrefs.getBoolean("folderChecked", false);
+        vibrationChillMode = sharedPrefs.getBoolean("vibrationChillMode", true);
         alarmList = new Gson().fromJson(sharedPrefs.getString("alarmList", null), new TypeToken<ArrayList<Alarm>>() {}.getType());
 
         if (alarmList == null)
@@ -171,6 +172,36 @@ public class WeckerParameters  extends Application
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putBoolean("folderChecked", folderChecked);
+        editor.apply();
+    }
+
+    public int getAlarmVolume()
+    {
+        return alarmVolume;
+    }
+
+    public void setAlarmVolume(int alarmVolume)
+    {
+        this.alarmVolume = alarmVolume;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putInt("alarmVolume", alarmVolume);
+        editor.apply();
+    }
+
+    public boolean isVibrationChillMode()
+    {
+        return vibrationChillMode;
+    }
+
+    public void setVibrationChillMode(boolean vibrationChillMode)
+    {
+        this.vibrationChillMode = vibrationChillMode;
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putBoolean("vibrationChillMode", vibrationChillMode);
         editor.apply();
     }
 }

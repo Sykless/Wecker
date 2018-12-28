@@ -49,13 +49,15 @@ public class SetupAlarm extends BaseActivity
     ArrayList<Button> dayButtons = new ArrayList<>();
     ArrayList<Boolean> buttonClicked = new ArrayList<>(Arrays.asList(false, false, false, false, false, false, false));
 
+    Intent intent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         app = (WeckerParameters) getApplicationContext();
 
-        Intent intent = getIntent();
+        intent = getIntent();
 
         if (intent.getBooleanExtra("fromHome",false))
         {
@@ -264,6 +266,28 @@ public class SetupAlarm extends BaseActivity
         }
 
         System.out.println(idList);
+        System.out.println(app.getAlarmList().size());
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        app = (WeckerParameters) getApplicationContext();
+
+        if (intent.getBooleanExtra("fromHome",false))
+        {
+            alarmId = intent.getIntExtra("alarmId",0);
+
+            alarm = app.getAlarmList().get(alarmId);
+            idList = alarm.getIdSongsList();
+        }
+        else
+        {
+            alarm = new Alarm();
+            idList = intent.getStringArrayListExtra("idList");
+        }
     }
 
     public void goToSetupPlaylist(View view)
@@ -279,6 +303,7 @@ public class SetupAlarm extends BaseActivity
         alarm.setHours(Integer.valueOf(hours.getText().toString()));
         alarm.setMinutes(Integer.valueOf(minutes.getText().toString()));
         alarm.setDays(buttonClicked);
+        System.out.println(idList);
         alarm.setIdSongsList(idList);
         alarm.setVibration(vibrateBox.isChecked());
         alarm.setEmergencyAlarm(emergencyBox.isChecked());
@@ -291,7 +316,7 @@ public class SetupAlarm extends BaseActivity
         if (getIntent().getBooleanExtra("fromHome",false))
         {
             ArrayList<Alarm> alarmList = app.getAlarmList();
-            alarmList.set(alarmId,alarm);
+            alarmList.set(alarmId, alarm);
             app.setAlarmList(alarmList);
 
             finish();

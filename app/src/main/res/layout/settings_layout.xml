@@ -7,213 +7,289 @@
     android:background="@color/blue"
     tools:context=".Settings">
 
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/mainVolumeLayout"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/validateButton"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginTop="16dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/mainFolderLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/volumeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="Volume de l'alarme"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginBottom="2dp"
+            app:fontFamily="@font/carter_one" />
+
+        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/volumeLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:clickable="true"
+            android:focusable="true">
 
-            <RelativeLayout
-                android:id="@+id/folderLayout"
+            <SeekBar
+                android:id="@+id/volume"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp"
-                android:gravity="center">
+                android:layout_gravity="center_vertical"
+                android:max="10"
+                android:progress="5"
+                android:thumb="@drawable/thumb_size" />
+        </FrameLayout>
 
-                <TextView
-                    android:id="@+id/musicFolderText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_toEndOf="@+id/emergencyCheckBox"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:text="Dossier musique"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    app:fontFamily="@font/carter_one" />
+    </LinearLayout>
 
-                <Button
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:background="@drawable/round_button"
-                    android:backgroundTint="@color/white"
-                    android:gravity="center"
-                    android:text="?"
-                    android:textColor="@color/blue"
-                    android:textSize="16sp" />
-            </RelativeLayout>
+    <LinearLayout
+        android:id="@+id/mainFolderLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/mainDefaultAlarm"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/mainVolumeLayout">
 
-            <LinearLayout
-                android:id="@+id/folderLocationLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp"
-                android:background="@color/darkBlue">
+        <RelativeLayout
+            android:id="@+id/folderLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginBottom="2dp">
 
-                <TextView
-                    android:id="@+id/folderLocationText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:text="Non spécifié"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    android:layout_marginStart="8dp"
-                    app:fontFamily="@font/carter_one" />
-            </LinearLayout>
-
-            <RelativeLayout
-                android:id="@+id/defaultAlarmLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginBottom="2dp">
-
-                <TextView
-                    android:id="@+id/defaultAlarmText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_toEndOf="@+id/emergencyCheckBox"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:text="Alarme par défaut"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    app:fontFamily="@font/carter_one" />
-
-                <Button
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:background="@drawable/round_button"
-                    android:backgroundTint="@color/white"
-                    android:gravity="center"
-                    android:text="?"
-                    android:textColor="@color/blue"
-                    android:textSize="16sp" />
-            </RelativeLayout>
-
-            <LinearLayout
-                android:id="@+id/defaultLocationLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp"
-                android:background="@color/darkBlue">
-
-                <TextView
-                    android:id="@+id/defaultLocationText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:text="Non spécifiée"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    android:layout_marginStart="8dp"
-                    app:fontFamily="@font/carter_one" />
-            </LinearLayout>
-
-            <RelativeLayout
-                android:id="@+id/musicLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginBottom="2dp">
-
-                <TextView
-                    android:id="@+id/musicText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_toEndOf="@+id/emergencyCheckBox"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:text="Mode Musique"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    app:fontFamily="@font/carter_one" />
-
-                <Button
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:background="@drawable/round_button"
-                    android:backgroundTint="@color/white"
-                    android:gravity="center"
-                    android:text="?"
-                    android:textColor="@color/blue"
-                    android:textSize="16sp" />
-            </RelativeLayout>
-
-            <LinearLayout
-                android:id="@+id/vibrateLayout"
+            <TextView
+                android:id="@+id/musicFolderText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
-
-                <LinearLayout
-                    android:id="@+id/vibrateCheckBox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:paddingEnd="15dp">
-
-                    <CheckBox
-                        android:id="@+id/vibrateBox"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:buttonTint="#FFFFFF"
-                        android:scaleX="1.5"
-                        android:scaleY="1.5" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/vibrationText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:text="Vibrations"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    app:fontFamily="@font/carter_one" />
-            </LinearLayout>
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/emergencyCheckBox"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="Dossier musique"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:fontFamily="@font/carter_one" />
 
             <Button
-                android:id="@+id/servicesButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:backgroundTint="#FFFFFF"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/round_button"
+                android:backgroundTint="@color/white"
                 android:gravity="center"
-                android:text="Services de musique"
-                android:textAllCaps="false"
-                android:textColor="@color/ic_launcher_background"
+                android:text="?"
+                android:textColor="@color/blue"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/folderLocationLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/darkBlue"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/folderLocationText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:text="Non spécifié"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit ="marquee_forever"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:scrollHorizontally="true"
+                android:textColor="@color/white"
                 android:textSize="20sp"
                 app:fontFamily="@font/carter_one" />
         </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/mainDefaultAlarm"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/mainMusicLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mainFolderLayout">
+
+        <RelativeLayout
+            android:id="@+id/defaultAlarmLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginBottom="2dp">
+
+            <TextView
+                android:id="@+id/defaultAlarmText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="Alarme par défaut"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:fontFamily="@font/carter_one" />
+
+            <Button
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/round_button"
+                android:backgroundTint="@color/white"
+                android:gravity="center"
+                android:text="?"
+                android:textColor="@color/blue"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/defaultLocationLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/darkBlue"
+            android:orientation="horizontal"
+            android:layout_marginBottom="2dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/defaultLocationText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Non spécifiée"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:fontFamily="@font/carter_one" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/mainMusicLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mainDefaultAlarm"
+        app:layout_constraintBottom_toTopOf="@+id/servicesButton">
+
+        <RelativeLayout
+            android:id="@+id/musicLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/musicText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/emergencyCheckBox"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="Mode Musique"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:fontFamily="@font/carter_one" />
+
+            <Button
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/round_button"
+                android:backgroundTint="@color/white"
+                android:gravity="center"
+                android:text="?"
+                android:textColor="@color/blue"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/vibrateLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/vibrateCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingEnd="15dp">
+
+                <CheckBox
+                    android:id="@+id/vibrateBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="#FFFFFF"
+                    android:scaleX="1.5"
+                    android:scaleY="1.5" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/vibrationText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="Vibrations"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                app:fontFamily="@font/carter_one" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/servicesButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#FFFFFF"
+        android:gravity="center"
+        android:onClick="goToMusicOrigin"
+        android:text="Services de musique"
+        android:textAllCaps="false"
+        android:textColor="@color/ic_launcher_background"
+        android:textSize="20sp"
+        app:fontFamily="@font/carter_one"
+        app:layout_constraintBottom_toTopOf="@+id/validateButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mainMusicLayout" />
 
     <Button
         android:id="@+id/validateButton"
@@ -224,6 +300,7 @@
         android:layout_marginBottom="25dp"
         android:backgroundTint="#FFFFFF"
         android:gravity="center"
+        android:onClick="returnToHome"
         android:padding="15dp"
         android:text="Valider"
         android:textAllCaps="false"

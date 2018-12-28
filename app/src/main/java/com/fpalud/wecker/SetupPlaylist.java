@@ -104,7 +104,8 @@ public class SetupPlaylist extends BaseActivity
     ArrayList<String> spotifyPlaylistList = new ArrayList<>();
     ArrayList<String> spotifyPlaylistNameList = new ArrayList<>();
     ArrayList<String> idList = new ArrayList<>();
-    ArrayList<String> totalIdList = new ArrayList<>();
+    ArrayList<String> newIdList = new ArrayList<>();
+    ArrayList<String> oldIdList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -160,7 +161,7 @@ public class SetupPlaylist extends BaseActivity
             alarmId = getIntent().getIntExtra("alarmId",0);
 
             currentAlarm = app.getAlarmList().get(alarmId);
-            idList = currentAlarm.getIdSongsList();
+            idList = (ArrayList<String>) currentAlarm.getIdSongsList().clone();
         }
 
         connectionSetup(INIT);
@@ -213,6 +214,14 @@ public class SetupPlaylist extends BaseActivity
             {
                 if (fromAlarm)
                 {
+                    System.out.println(idList);
+
+                    currentAlarm.setIdSongsList(idList);
+
+                    ArrayList<Alarm> alarmList = app.getAlarmList();
+                    alarmList.set(alarmId, currentAlarm);
+                    app.setAlarmList(alarmList);
+
                     finish();
                 }
                 else
@@ -412,6 +421,16 @@ public class SetupPlaylist extends BaseActivity
                         {
                             getFolderSongs();
                         }
+                        else
+                        {
+                            System.out.println(newIdList);
+                            System.out.println(idList);
+
+                            idList = (ArrayList<String>) newIdList.clone();
+
+                            System.out.println(newIdList);
+                            System.out.println(idList);
+                        }
                     }
                 }
                 else
@@ -461,6 +480,16 @@ public class SetupPlaylist extends BaseActivity
         {
             getFolderSongs();
         }
+        else
+        {
+            System.out.println(newIdList);
+            System.out.println(idList);
+
+            idList = (ArrayList<String>) newIdList.clone();
+
+            System.out.println(newIdList);
+            System.out.println(idList);
+        }
     }
 
     public int getLovedTracksID(List<Playlist> list)
@@ -490,6 +519,14 @@ public class SetupPlaylist extends BaseActivity
             addTitle("Dossier Musique");
             addPlaylist(FOLDER,"Liste des musiques");
         }
+
+        System.out.println(newIdList);
+        System.out.println(idList);
+
+        idList = (ArrayList<String>) newIdList.clone();
+
+        System.out.println(newIdList);
+        System.out.println(idList);
     }
 
     public void addTitle(String title)
@@ -705,7 +742,17 @@ public class SetupPlaylist extends BaseActivity
 
             if (fromAlarm)
             {
-                checkBox.setChecked(idList.contains(String.valueOf(deezerCorrectPlaylistList.get(deezerPlaylistnumber).getId())));
+                if (idList.contains(String.valueOf(deezerCorrectPlaylistList.get(deezerPlaylistnumber).getId())))
+                {
+                    System.out.println("Contains");
+
+                    checkBox.setChecked(true);
+                    newIdList.add(String.valueOf(deezerCorrectPlaylistList.get(deezerPlaylistnumber).getId()));
+                }
+                else
+                {
+                    checkBox.setChecked(false);
+                }
             }
 
             deezerPlaylistnumber++;
@@ -723,7 +770,17 @@ public class SetupPlaylist extends BaseActivity
 
             if (fromAlarm)
             {
-                checkBox.setChecked(idList.contains(spotifyPlaylistList.get(spotifyPlaylistnumber - 1)));
+                if (idList.contains(spotifyPlaylistList.get(spotifyPlaylistnumber - 1)))
+                {
+                    System.out.println("Contains");
+
+                    checkBox.setChecked(true);
+                    newIdList.add(spotifyPlaylistList.get(spotifyPlaylistnumber - 1));
+                }
+                else
+                {
+                    checkBox.setChecked(false);
+                }
             }
 
             spotifyPlaylistnumber++;
@@ -742,7 +799,18 @@ public class SetupPlaylist extends BaseActivity
 
             if (fromAlarm)
             {
-                checkBox.setChecked(idList.contains("folderMusic"));
+                if (idList.contains("folderMusic"))
+                {
+                    System.out.println("Contains");
+
+                    checkBox.setChecked(true);
+                    newIdList.add("folderMusic");
+                }
+                else
+                {
+                    checkBox.setChecked(false);
+                }
+
             }
 
             AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
