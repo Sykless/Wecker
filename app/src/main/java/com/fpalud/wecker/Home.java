@@ -6,37 +6,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.AnimationDrawable;
-import android.media.Image;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.constraint.ConstraintLayout;
-import android.support.constraint.ConstraintSet;
 import android.support.v4.content.res.ResourcesCompat;
-import android.support.v4.widget.CompoundButtonCompat;
-import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.spotify.protocol.client.CallResult;
-
-import org.w3c.dom.Text;
-
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 
 public class Home extends BaseActivity
 {
@@ -48,10 +28,7 @@ public class Home extends BaseActivity
 
     ArrayList<Alarm> alarmList = new ArrayList<>();
     String[] daysValue = {"L","M","M","J","V","S","D"};
-    int[] days = {7,6,0,1,2,3,4,5};
-    int[] endMonth = {31,28,31,30,31,30,31,31,30,31,30,31};
 
-    private static final int PARAMS = 0;
     private static final int NEWALARM = 1;
 
     @Override
@@ -64,17 +41,6 @@ public class Home extends BaseActivity
         alarmList = app.getAlarmList();
 
         mainLayout = findViewById(R.id.mainLayout);
-
-        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
-        Intent intent = new Intent(this, LaunchAlarm.class);
-        //intent.putExtra("alarmId",app.getAlarmList().get(0).getId());
-        PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Calendar futureDate = Calendar.getInstance();
-        futureDate.set(Calendar.SECOND, futureDate.get(Calendar.SECOND) + 1);
-
-        // alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
     }
 
     @Override

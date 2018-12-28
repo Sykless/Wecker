@@ -15,12 +15,14 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
-    public void finish() {
+    public void finish()
+    {
         super.finish();
         onLeaveThisActivity();
     }
 
-    protected void onLeaveThisActivity() {
+    protected void onLeaveThisActivity()
+    {
         overridePendingTransition(R.anim.enter_from_left, R.anim.exit_to_right);
     }
 
@@ -29,7 +31,8 @@ public abstract class BaseActivity extends AppCompatActivity
     // right after the super, so every single activity transaction will be animated:
 
     @Override
-    public void startActivity(Intent intent) {
+    public void startActivity(Intent intent)
+    {
         super.startActivity(intent);
         onStartNewActivity();
     }
@@ -41,7 +44,8 @@ public abstract class BaseActivity extends AppCompatActivity
         onStartNewActivity();
     }
 
-    protected void onStartNewActivity() {
+    protected void onStartNewActivity()
+    {
         overridePendingTransition(R.anim.enter_from_right, R.anim.exit_to_left);
     }
 }

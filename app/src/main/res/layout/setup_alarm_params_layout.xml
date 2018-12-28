@@ -249,9 +249,9 @@
             android:id="@+id/vibrationText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Vibration"
             android:clickable="true"
             android:focusable="true"
+            android:text="Vibrations"
             android:textColor="@color/white"
             android:textSize="20sp"
             app:fontFamily="@font/carter_one" />

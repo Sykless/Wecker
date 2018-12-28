@@ -33,8 +33,6 @@ public class Circle extends View {
 
         int realSize = size - strokeWidth/2;
         rect = new RectF(strokeWidth/2 - 1, strokeWidth/2 - 1, realSize + 1, realSize + 1);
-
-        //Initial Angle (optional, it can be zero)
         angle = 0;
     }
 
@@ -53,13 +51,12 @@ public class Circle extends View {
         paint.setColor(Color.WHITE);
 
         rect = new RectF(strokeWidth/2, strokeWidth/2, size - strokeWidth/2, size - strokeWidth/2);
-
-        //Initial Angle (optional, it can be zero)
         angle = newAngle;
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas canvas)
+    {
         super.onDraw(canvas);
         canvas.drawArc(rect, START_ANGLE_POINT, angle, false, paint);
     }

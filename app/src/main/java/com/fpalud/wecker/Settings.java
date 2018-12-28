@@ -11,12 +11,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -320,7 +317,7 @@ public class Settings extends BaseActivity
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setMessage("Mode Musique\n\n"+
-                "Permet de faire défiler des musiques aléatoires en se réveillant.\n\n" +
+                "Permet de faire défiler des musiques aléatoires de toutes les playlists séléctionnées en se réveillant.\n\n" +
                 "Une vibration peut survenir entre chaque musique pour garantir le réveil.")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener()
                 {

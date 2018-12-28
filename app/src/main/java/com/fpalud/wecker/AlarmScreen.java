@@ -36,6 +36,7 @@ import com.deezer.sdk.player.event.OnPlayerErrorListener;
 import com.deezer.sdk.player.event.OnPlayerStateChangeListener;
 import com.deezer.sdk.player.event.PlayerState;
 import com.deezer.sdk.player.networkcheck.WifiAndMobileNetworkStateChecker;
+
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
@@ -101,7 +102,6 @@ public class AlarmScreen extends BaseActivity
     int offset = 0;
     int musicOrigin;
     int nextMusicOrigin;
-    int musicDuration = 0;
 
     boolean atLeastITriedSpotify = false;
     boolean atLeastITriedAPKSpotify = false;

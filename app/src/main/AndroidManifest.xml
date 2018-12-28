@@ -33,7 +33,6 @@
         <activity
             android:name=".AlarmScreen"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
-        <activity android:name=".Deezer" />
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
@@ -42,7 +41,6 @@
             android:name=".LaunchAlarm"
             android:process=":remote" />
 
-        <activity android:name=".Spotify" />
         <activity android:name=".MusicOrigin" />
 
         <meta-data
@@ -53,8 +51,6 @@
         <activity
             android:name=".SetupAlarm"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
-        <activity android:name=".AlarmTesting" />
-        <activity android:name=".Connection" />
         <activity android:name=".Settings" />
 
         <receiver android:name=".ProgramAlarm">

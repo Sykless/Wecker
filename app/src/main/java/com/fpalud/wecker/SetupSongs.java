@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -66,7 +65,6 @@ public class SetupSongs extends BaseActivity
 
     private static final int DEEZER = 0;
     private static final int SPOTIFY = 1;
-    private static final int FOLDER = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)

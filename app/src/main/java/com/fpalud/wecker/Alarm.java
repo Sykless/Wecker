@@ -1,13 +1,7 @@
 package com.fpalud.wecker;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class Alarm
 {
@@ -31,24 +25,6 @@ public class Alarm
     Alarm()
     {
         setActive(true);
-        id = (int) System.currentTimeMillis();
-    }
-
-    Alarm(int hours, int minutes, ArrayList<Boolean> days, ArrayList<String> idSongsList,
-          boolean vibration, boolean emergencyAlarm, boolean randomPlaylist, boolean randomSong)
-    {
-        setHours(hours);
-        setMinutes(minutes);
-        setDays(days);
-
-        setIdSongsList(idSongsList);
-
-        setActive(true);
-        setVibration(vibration);
-        setEmergencyAlarm(emergencyAlarm);
-        setRandomPlaylist(randomPlaylist);
-        setRandomSong(randomSong);
-
         id = (int) System.currentTimeMillis();
     }
 

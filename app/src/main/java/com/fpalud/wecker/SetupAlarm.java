@@ -16,9 +16,9 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
-import java.nio.file.WatchKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -242,6 +242,8 @@ public class SetupAlarm extends BaseActivity
             {
                 v.startAnimation(buttonClick);
                 v.startAnimation(buttonClickRelease);
+
+                Toast.makeText(app, "Pas encore implémentée.", Toast.LENGTH_SHORT).show();
 
                 if (emergencyBox.isChecked())
                 {
@@ -529,7 +531,48 @@ public class SetupAlarm extends BaseActivity
 
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTimeInMillis(), sender);
 
-            System.out.println(futureDate.getTime());
+            long difference = (futureDate.getTimeInMillis() - Calendar.getInstance().getTimeInMillis()) / 1000;
+            long totalMinutes = difference / 60;
+            long totalHours;
+            long hours;
+            long minutes;
+            long numberOfDays;
+
+            if (totalMinutes == 0)
+            {
+                String secondsDisplay = difference + " seconde" + (difference > 1 ? "s." : ".");
+                Toast.makeText(context, "Ce réveil sonnera dans " + secondsDisplay, Toast.LENGTH_SHORT).show();
+            }
+            else if (totalMinutes < 60)
+            {
+                String minutesDisplay = totalMinutes + " minute" + (totalMinutes > 1 ? "s." : ".");
+                Toast.makeText(context, "Ce réveil sonnera dans " + minutesDisplay, Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                minutes = totalMinutes % 60;
+                totalHours = totalMinutes / 60;
+
+                if (totalHours < 24)
+                {
+                    String hoursDisplay = totalHours + " heure" + (totalHours > 1 ? "s" : "");
+                    String minutesDisplay = (minutes > 0 ? " et " + minutes + " minute" + (minutes > 1 ? "s." : "") : ".");
+
+                    Toast.makeText(context, "Ce réveil sonnera dans " + hoursDisplay + minutesDisplay, Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    hours = totalHours % 24;
+                    numberOfDays = totalHours / 24;
+
+                    String daysDisplay = numberOfDays + " jour" + (numberOfDays > 1 ? "s" : "");
+                    String hoursDisplay = (hours > 0 ? (minutes > 0 ? ", " : " et ") + hours + " heure"
+                            + (hours > 1 ? "s" : "") + (minutes > 0 ? " et " : ".") : (minutes > 0 ? " et " : "."));
+                    String minutesDisplay = (minutes > 0 ? + minutes + " minute" + (minutes > 1 ? "s." : "") : "");
+
+                    Toast.makeText(context, "Ce réveil sonnera dans " + daysDisplay + hoursDisplay + minutesDisplay, Toast.LENGTH_SHORT).show();
+                }
+            }
         }
         else
         {
