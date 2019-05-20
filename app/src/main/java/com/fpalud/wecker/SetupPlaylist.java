@@ -244,6 +244,7 @@ public class SetupPlaylist extends BaseActivity
                     {
                         Intent intent = new Intent(this, SetupAlarm.class);
                         intent.putStringArrayListExtra("idList", idList);
+                        System.out.println("On est bien là");
                         intent.putExtra("randomPlaylist",!playlistSwitch.isChecked());
                         intent.putExtra("randomSong",true);
 
@@ -251,6 +252,7 @@ public class SetupPlaylist extends BaseActivity
                     }
                     else
                     {
+                        System.out.println("On est pas bien là");
                         Intent intent = new Intent(this, SetupSongs.class);
                         intent.putExtra("playlistId", idList.get(0));
                         intent.putExtra("playlistName", playlistsName.get(idList.get(0)));

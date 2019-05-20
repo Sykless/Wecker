@@ -177,6 +177,7 @@ public class SetupSongs extends BaseActivity
     public void goToNext()
     {
         int alarmId = getIntent().getIntExtra("alarmId",-1);
+        System.out.println("Je fous quoi ici ?");
 
         if (alarmId == -1)
         {

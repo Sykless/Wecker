@@ -45,7 +45,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:max="10"
-                android:progress="5" />
+                android:progress="5"
+                android:thumb="@drawable/thumb_size"/>
         </FrameLayout>
 
     </LinearLayout>

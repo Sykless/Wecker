@@ -79,12 +79,12 @@ public class Settings extends BaseActivity
         }
         catch (Exception e)
         {
-            // mediaPlayer = MediaPlayer.create(this, getResources().getIdentifier("deja_vu", "raw", getPackageName()));
+            mediaPlayer = MediaPlayer.create(this, getResources().getIdentifier("deja_vu", "raw", getPackageName()));
         }
 
         vibrationChillMode.setChecked(app.isVibrationChillMode());
 
-        // mediaPlayer.setLooping(true);
+        mediaPlayer.setLooping(true);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         maxVolume = audioManager.getStreamMaxVolume(audioManager.STREAM_MUSIC);
 
@@ -96,13 +96,13 @@ public class Settings extends BaseActivity
             @Override
             public void onStopTrackingTouch(SeekBar seekBar)
             {
-                //mediaPlayer.pause();
+                mediaPlayer.pause();
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar)
             {
-                //mediaPlayer.start();
+                mediaPlayer.start();
             }
 
             @Override
@@ -148,11 +148,11 @@ public class Settings extends BaseActivity
                         }
                         catch (Exception e)
                         {
-                            //int resID = getResources().getIdentifier("deja_vu", "raw", getPackageName());
-                            //mediaPlayer = MediaPlayer.create(app, resID);
+                            int resID = getResources().getIdentifier("deja_vu", "raw", getPackageName());
+                            mediaPlayer = MediaPlayer.create(app, resID);
                         }
 
-                        //mediaPlayer.setLooping(true);
+                        mediaPlayer.setLooping(true);
                     }
                 }
             }

@@ -81,10 +81,14 @@ public class SetupAlarm extends BaseActivity
                 selectedSong = new File(intent.getStringExtra("selectedMusicPath"));
             }
 
+            System.out.println(intent.getBooleanExtra("randomSong",false));
+            System.out.println(intent.getBooleanExtra("randomSong",true));
+
             alarm.setSelectedSong(selectedSong);
             alarm.setSelectedSongId(intent.getStringExtra("selectedMusicId"));
-            alarm.setRandomSong(intent.getBooleanExtra("randomSong",false));
-            alarm.setRandomPlaylist(intent.getBooleanExtra("randomPlaylist",false));
+            alarm.setRandomSong(intent.getBooleanExtra("randomSong",true));
+            alarm.setRandomPlaylist(intent.getBooleanExtra("randomPlaylist",true));
+            System.out.println("Random song ? " + alarm.isRandomSong());
             idList = intent.getStringArrayListExtra("idList");
 
             setContentView(R.layout.setup_alarm_layout);
@@ -302,6 +306,22 @@ public class SetupAlarm extends BaseActivity
         else
         {
             alarm = new Alarm();
+
+            File selectedSong = null;
+
+            if (intent.getStringExtra("selectedMusicPath") != null)
+            {
+                selectedSong = new File(intent.getStringExtra("selectedMusicPath"));
+            }
+
+            System.out.println(intent.getBooleanExtra("randomSong",false));
+            System.out.println(intent.getBooleanExtra("randomSong",true));
+
+            alarm.setSelectedSong(selectedSong);
+            alarm.setSelectedSongId(intent.getStringExtra("selectedMusicId"));
+            alarm.setRandomSong(intent.getBooleanExtra("randomSong",true));
+            alarm.setRandomPlaylist(intent.getBooleanExtra("randomPlaylist",true));
+
             idList = intent.getStringArrayListExtra("idList");
         }
     }
@@ -316,6 +336,8 @@ public class SetupAlarm extends BaseActivity
 
     public void goToHome(View view)
     {
+        System.out.println("random song 2 : " + alarm.isRandomSong());
+
         alarm.setHours(Integer.valueOf(hours.getText().toString()));
         alarm.setMinutes(Integer.valueOf(minutes.getText().toString()));
         alarm.setDays(buttonClicked);
@@ -324,6 +346,8 @@ public class SetupAlarm extends BaseActivity
         alarm.setVibration(vibrateBox.isChecked());
         alarm.setEmergencyAlarm(emergencyBox.isChecked());
         alarm.setActive(true);
+
+        System.out.println("random song 3 : " + alarm.isRandomSong());
 
         setupAlarm(alarm, this);
 
@@ -434,6 +458,8 @@ public class SetupAlarm extends BaseActivity
 
     public static void setupAlarm(Alarm alarm, Context context)
     {
+        System.out.println("Random song : " + alarm.isRandomSong());
+
         int[] days = {7,6,0,1,2,3,4,5};
         int[] endMonth = {31,28,31,30,31,30,31,31,30,31,30,31};
 

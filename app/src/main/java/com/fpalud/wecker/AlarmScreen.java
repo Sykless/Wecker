@@ -67,6 +67,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
+import yogesh.firzen.mukkiasevaigal.S;
+
 import static android.view.View.GONE;
 import static com.deezer.sdk.player.event.PlayerState.PLAYBACK_COMPLETED;
 import static com.spotify.sdk.android.authentication.AuthenticationResponse.Type.TOKEN;
@@ -164,6 +166,25 @@ public class AlarmScreen extends BaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        if (Build.VERSION.SDK_INT >= 27)
+        {
+            setShowWhenLocked(true);
+            setTurnScreenOn(true);
+        }
+        else if (Build.VERSION.SDK_INT == 26)
+        {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        }
+        else
+        {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wake_up_screen_layout);
 
@@ -344,11 +365,14 @@ public class AlarmScreen extends BaseActivity
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         alarmId = getIntent().getIntExtra("alarmId",-1);
+        System.out.println(alarmId);
 
         if (alarmId != -1)
         {
             for (Alarm a : app.getAlarmList())
             {
+                System.out.println(a.isRandomSong());
+
                 if (a.getId() == alarmId)
                 {
                     alarm = a;
@@ -411,11 +435,6 @@ public class AlarmScreen extends BaseActivity
                 {
                     activityLayout.getChildAt(i).setVisibility(View.VISIBLE);
                 }
-
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
             }
         });
 
@@ -431,6 +450,7 @@ public class AlarmScreen extends BaseActivity
             try
             {
                 musicOrigin = FOLDER;
+                System.out.println("Dégage ?");
 
                 if (alarm.isRandomSong())
                 {
@@ -476,7 +496,7 @@ public class AlarmScreen extends BaseActivity
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
                 defaultAlarm();
             }
         }
@@ -901,10 +921,7 @@ public class AlarmScreen extends BaseActivity
         {
             System.out.println("Trying Spotify");
 
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            System.out.println("Ça devrait être déverouillé");
 
             if (app.getSpotifyConnect() == null || !app.getSpotifyConnect().isConnected())
             {
@@ -974,9 +991,12 @@ public class AlarmScreen extends BaseActivity
         else
         {
             System.out.println(trackNumber);
+            System.out.println(alarm.isRandomSong());
 
             if (alarm.isRandomSong())
             {
+                System.out.println("Normalement t'es là");
+
                 ArrayList<Integer> trackThreasholds = new ArrayList<>(trackNumber);
 
                 for (int i = trackThreasholds.size() - 1 ; i >= 0 ; i--)
@@ -1216,6 +1236,7 @@ public class AlarmScreen extends BaseActivity
                     {
                         try
                         {
+                            System.out.println("Wat");
                             String size = server_response.getString("total");
 
                             if (size != null)
